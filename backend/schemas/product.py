@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 
 class ProductBase(BaseModel):
     name: str
@@ -31,5 +31,5 @@ class ProductImage(BaseModel):
 
 class Product(ProductBase):
     id: int
-    images: list[ProductImage] = []
+    images: List[ProductImage] = []
     model_config = ConfigDict(from_attributes=True)

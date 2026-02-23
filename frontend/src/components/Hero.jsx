@@ -32,27 +32,6 @@ const Hero = () => {
                     </div>
                 </div>
 
-                <div className="hero-image-wrapper">
-                    <div className="hero-image-backdrop"></div>
-                    <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80" alt="Luxury furniture" className="hero-image" />
-
-                    {/* Floating Info Cards */}
-                    <div className="floating-card floating-price">
-                        <div className="dot green"></div>
-                        <div>
-                            <p className="floating-label">Minimalist Sofa</p>
-                            <p className="floating-value">$299.00</p>
-                        </div>
-                    </div>
-
-                    <div className="floating-card floating-material">
-                        <div className="material-icon">✨</div>
-                        <div>
-                            <p className="floating-label">Premium Quality</p>
-                            <p className="floating-value">Italian Fabric</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
     );

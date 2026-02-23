@@ -51,8 +51,16 @@ const Navbar = () => {
               <span className="cart-badge">{cartItemsCount}</span>
             )}
           </Link>
-          <Link to={user ? "/profile" : "/login"} style={{ color: 'inherit' }}>
-            <User className="nav-icon" />
+          <Link to={user ? "/profile" : "/login"} style={{ color: 'inherit', display: 'flex', alignItems: 'center' }}>
+            {user && user.profile_picture ? (
+              <img
+                src={user.profile_picture}
+                alt="Profile"
+                style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-teal)' }}
+              />
+            ) : (
+              <User className="nav-icon" />
+            )}
           </Link>
         </div>
 
