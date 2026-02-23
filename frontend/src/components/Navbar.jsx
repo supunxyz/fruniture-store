@@ -29,17 +29,16 @@ const Navbar = () => {
       {scrolled && <div style={{ height: '80px' }}></div>}
 
       <nav className={`navbar container ${scrolled ? 'nav-scrolled' : ''}`}>
-        <div className="nav-logo">
+        <Link to="/" className="nav-logo" style={{ textDecoration: 'none', color: 'inherit' }}>
           <h2><span>F</span>Furnish.</h2>
-        </div>
+        </Link>
 
         <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
           <Link to="/" className="active" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
           <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Shop</Link>
-          <a href="#" onClick={() => setIsMobileMenuOpen(false)}>Product</a>
-          <a href="#" onClick={() => setIsMobileMenuOpen(false)}>About Us</a>
-          <a href="#" onClick={() => setIsMobileMenuOpen(false)}>Contact Us</a>
-          <a href="#" onClick={() => setIsMobileMenuOpen(false)}>Blog</a>
+          <Link to="/about" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
+          <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact Us</Link>
+          <Link to="/blog" onClick={() => setIsMobileMenuOpen(false)}>Blog</Link>
         </div>
 
         <div className="nav-icons">
