@@ -66,7 +66,7 @@ const ContactUs = () => {
                     <div style={{ background: 'var(--card-bg)', padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                         <h2 style={{ fontSize: '1.8rem', color: 'var(--text-dark)', marginBottom: '24px' }}>Send a Message</h2>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label style={{ color: 'var(--text-dark)', fontWeight: '500', fontSize: '0.9rem' }}>First Name</label>
                                     <input type="text" required style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-light)' }} placeholder="John" />

@@ -38,7 +38,7 @@ const ProductDetails = () => {
                     <ArrowLeft size={20} /> Back to Shop
                 </Link>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'start' }}>
+                <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'start' }}>
 
                     {/* Product Image Gallery */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -101,7 +101,7 @@ const ProductDetails = () => {
                         </div>
 
                         {/* Additional Info Cards */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', background: 'var(--bg-secondary)', borderRadius: '16px' }}>
                                 <div style={{ background: 'var(--bg-light)', padding: '12px', borderRadius: '50%', color: 'var(--primary-teal)' }}>
                                     <Truck size={24} />

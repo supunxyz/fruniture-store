@@ -25,12 +25,12 @@ const Cart = () => {
                         </Link>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '40px', alignItems: 'start' }}>
+                    <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '40px', alignItems: 'start' }}>
 
                         {/* Cart Items */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             {cart.map(item => (
-                                <div key={item.product.id} style={{ display: 'flex', gap: '24px', padding: '24px', background: 'var(--bg-secondary)', borderRadius: '16px', alignItems: 'center' }}>
+                                <div key={item.product.id} className="cart-item-mobile" style={{ display: 'flex', gap: '24px', padding: '24px', background: 'var(--bg-secondary)', borderRadius: '16px', alignItems: 'center' }}>
                                     <div style={{ width: '120px', height: '120px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
                                         <img src={item.product.image_url} alt={item.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>

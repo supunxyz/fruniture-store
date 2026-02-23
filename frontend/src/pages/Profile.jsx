@@ -110,7 +110,7 @@ const Profile = () => {
             <div className="container" style={{ marginTop: '120px' }}>
                 <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)', marginBottom: '32px' }}>My Account</h1>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 3fr)', gap: '40px', alignItems: 'start' }}>
+                <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 3fr)', gap: '40px', alignItems: 'start' }}>
 
                     {/* Sidebar */}
                     <div style={{ background: 'var(--card-bg)', borderRadius: '24px', padding: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>

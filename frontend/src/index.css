@@ -405,12 +405,126 @@ button {
   }
 }
 
+/* NEW HERO SECTION */
+.new-hero-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  padding: 60px clamp(20px, 5vw, 60px);
+}
+
+.new-hero-content {
+  flex: 1 1 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  max-width: 550px;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: 16px;
+  line-height: 1.1;
+  color: var(--text-dark);
+}
+
+.new-hero-rating {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  margin-bottom: 40px;
+  max-width: 100%;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.new-hero-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 32px;
+}
+
+.new-hero-price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.new-hero-price .current-price {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+.new-hero-price .old-price {
+  font-size: 1rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.new-hero-image-side {
+  flex: 1 1 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.new-hero-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: var(--primary-teal-light);
+  filter: blur(80px);
+  border-radius: 50%;
+  z-index: 0;
+  opacity: 0.15;
+}
+
+.floating-image {
+  width: 100%;
+  max-width: 600px;
+  object-fit: contain;
+  z-index: 1;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.15));
+  mix-blend-mode: multiply;
+  animation: floatAnimation 4s ease-in-out infinite;
+}
+
+@keyframes floatAnimation {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
 /* FEATURES */
 .features-section {
   display: flex;
   justify-content: center;
   gap: 24px;
-  margin-top: -60px;
+  margin-top: 20px;
+  margin-bottom: 80px;
   position: relative;
   z-index: 20;
   flex-wrap: wrap;
@@ -713,5 +827,125 @@ button {
   .hero-shape::before,
   .hero-shape::after {
     display: none;
+  }
+}
+
+/* GLOBAL RESPONSIVE EXCEPTIONS */
+@media screen and (max-width: 900px) {
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .flex-col-mobile {
+    flex-direction: column !important;
+  }
+
+  .cart-item-mobile {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .cart-item-mobile>div:first-child {
+    width: 100% !important;
+    height: 300px !important;
+    max-width: none !important;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem) !important;
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem) !important;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  /* Responsive Mobile Carousel for Features */
+  .features-section {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    justify-content: flex-start !important;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-bottom: 20px;
+    /* Edge-to-edge swiping to bypass container padding */
+    margin-right: -20px;
+    margin-left: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .features-section::-webkit-scrollbar {
+    display: none;
+  }
+
+  .feature-card {
+    flex: 0 0 auto !important;
+    width: 260px !important;
+    scroll-snap-align: center;
+  }
+
+  /* Mobile Hero alignment fixes */
+  .new-hero-container {
+    padding: 20px 0;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .new-hero-content {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero-subtitle {
+    text-align: center;
+  }
+
+  .new-hero-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .floating-image {
+    max-width: 90%;
+  }
+
+  /* Products alignment fixes */
+  .section-title {
+    margin-bottom: 20px !important;
+  }
+
+  .products-section {
+    margin-top: 50px !important;
+    padding-bottom: 40px !important;
+  }
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }

@@ -346,3 +346,50 @@
     padding: 10px 20px;
     border-radius: 8px;
 }
+
+/* ADMIN RESPONSIVE STYLES */
+@media screen and (max-width: 900px) {
+    .admin-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px;
+    }
+
+    .admin-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .admin-nav button {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .admin-header {
+        padding: 0 20px;
+        flex-direction: column;
+        gap: 16px;
+        height: auto;
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+
+    .admin-content {
+        padding: 20px;
+    }
+
+    .admin-table-container {
+        overflow-x: auto;
+    }
+
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}

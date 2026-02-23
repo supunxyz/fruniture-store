@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Trash2, Star } from 'lucide-react';
 import axios from 'axios';
 import '../admin.css';
 
@@ -10,6 +10,7 @@ const Admin = () => {
     const [products, setProducts] = useState([]);
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [heroData, setHeroData] = useState(null);
     const [isProductModalOpen, setProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [newProduct, setNewProduct] = useState({
@@ -23,14 +24,16 @@ const Admin = () => {
 
     const fetchData = async () => {
         try {
-            const [prodRes, userRes, orderRes] = await Promise.all([
+            const [prodRes, userRes, orderRes, heroRes] = await Promise.all([
                 axios.get('http://localhost:8000/api/products'),
                 axios.get('http://localhost:8000/api/users'),
-                axios.get('http://localhost:8000/api/orders')
+                axios.get('http://localhost:8000/api/orders'),
+                axios.get('http://localhost:8000/api/hero')
             ]);
             setProducts(prodRes.data);
             setUsers(userRes.data);
             setOrders(orderRes.data);
+            setHeroData(heroRes.data);
             setStats({
                 products: prodRes.data.length,
                 users: userRes.data.length,
@@ -114,6 +117,18 @@ const Admin = () => {
             original_price: product.original_price || '',
             description: product.description || ''
         });
+    };
+
+    const handleUpdateHero = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await axios.put(`http://localhost:8000/api/hero/${heroData.id}`, heroData);
+            setHeroData(res.data);
+            alert("Hero settings updated successfully!");
+        } catch (error) {
+            console.error("Failed to update hero", error);
+            alert("Error updating hero settings.");
+        }
     };
 
     const renderDashboard = () => (
@@ -270,6 +285,76 @@ const Admin = () => {
         </div>
     );
 
+    const renderHeroSettings = () => (
+        <div className="admin-table-container">
+            <div className="admin-table-header">
+                <h3>Hero Section Settings</h3>
+            </div>
+            {heroData ? (
+                <form onSubmit={handleUpdateHero} style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px' }}>
+
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Title (First Line)</label>
+                            <input type="text" value={heroData.title_black} onChange={e => setHeroData({ ...heroData, title_black: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px', color: 'var(--primary-teal)' }}>Title (Highlighted)</label>
+                            <input type="text" value={heroData.title_colored} onChange={e => setHeroData({ ...heroData, title_colored: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Title (End Line)</label>
+                            <input type="text" value={heroData.title_black_2} onChange={e => setHeroData({ ...heroData, title_black_2: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Subtitle</label>
+                        <textarea value={heroData.subtitle} onChange={e => setHeroData({ ...heroData, subtitle: e.target.value })} rows={4} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontFamily: 'inherit' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Current Price</label>
+                            <input type="number" step="0.01" value={heroData.current_price} onChange={e => setHeroData({ ...heroData, current_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Old Price</label>
+                            <input type="number" step="0.01" value={heroData.old_price} onChange={e => setHeroData({ ...heroData, old_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Rating (e.g. 4.8)</label>
+                            <input type="number" step="0.1" value={heroData.rating} onChange={e => setHeroData({ ...heroData, rating: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Reviews Count</label>
+                            <input type="number" value={heroData.reviews_count} onChange={e => setHeroData({ ...heroData, reviews_count: parseInt(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Image URL</label>
+                        <input type="text" value={heroData.image_url} onChange={e => setHeroData({ ...heroData, image_url: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                        {heroData.image_url && (
+                            <div style={{ marginTop: '16px', background: 'var(--bg-light)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                                <img src={heroData.image_url} alt="Hero Preview" style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain' }} />
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ marginTop: '16px' }}>
+                        <button type="submit" className="btn-primary" style={{ padding: '12px 24px', borderRadius: '8px' }}>Save Changes</button>
+                    </div>
+                </form>
+            ) : (
+                <p>Loading settings...</p>
+            )}
+        </div>
+    );
+
     return (
         <div className="admin-layout">
             <aside className="admin-sidebar">
@@ -289,6 +374,9 @@ const Admin = () => {
                     <button className={activeTab === 'orders' ? 'active' : ''} onClick={() => setActiveTab('orders')}>
                         <ShoppingCart size={20} /> Orders
                     </button>
+                    <button className={activeTab === 'hero' ? 'active' : ''} onClick={() => setActiveTab('hero')}>
+                        <Star size={20} /> Hero Settings
+                    </button>
                 </nav>
                 <div className="admin-footer">
                     <button className="logout-btn" onClick={() => window.location.href = "/"}>
@@ -303,6 +391,7 @@ const Admin = () => {
                         {activeTab === 'products' && 'Product Inventory'}
                         {activeTab === 'users' && 'User Management'}
                         {activeTab === 'orders' && 'Order Tracking'}
+                        {activeTab === 'hero' && 'Storefront Settings'}
                     </h2>
                     <div className="admin-user-profile">
                         <div className="admin-avatar">A</div>
@@ -317,6 +406,7 @@ const Admin = () => {
                     {activeTab === 'products' && renderProducts()}
                     {activeTab === 'users' && renderUsers()}
                     {activeTab === 'orders' && renderOrders()}
+                    {activeTab === 'hero' && renderHeroSettings()}
                 </div>
             </main>
 

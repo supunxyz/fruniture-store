@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ShoppingBag, Truck, HeadphonesIcon, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 
@@ -11,6 +11,7 @@ const iconMap = {
 
 const Features = () => {
     const [features, setFeatures] = useState([]);
+    const scrollRef = useRef(null);
 
     useEffect(() => {
         // Fetch from FastAPI
@@ -27,9 +28,30 @@ const Features = () => {
             });
     }, []);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (scrollRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+
+                // Only autoscroll if there's actual overflow (mobile view)
+                if (scrollWidth > clientWidth) {
+                    // If we've reached the end
+                    if (scrollLeft + clientWidth >= scrollWidth - 10) {
+                        scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        // Scroll to next snap point (about the width of one card + gap)
+                        scrollRef.current.scrollBy({ left: 284, behavior: 'smooth' });
+                    }
+                }
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [features]);
+
     return (
         <section className="container">
-            <div className="features-section">
+            <div ref={scrollRef} className="features-section">
                 {features.map((item, idx) => (
                     <div key={idx} className="feature-card">
                         <div className="feature-icon-wrapper">
@@ -38,19 +60,6 @@ const Features = () => {
                         <div className="feature-title">{item.title}</div>
                     </div>
                 ))}
-            </div>
-
-            <div className="cards-row">
-                <div className="image-card">
-                    <img src="https://images.unsplash.com/photo-1550226891-ef816aed4a98?w=500&q=80" alt="Furniture Design Ideas" style={{ objectPosition: 'center' }} />
-                </div>
-                <div className="info-card">
-                    <div className="tag">FURNITURE DESIGN IDEAS</div>
-                    <p className="info-desc">
-                        Explore furnish's curated collection of and classic contemporary pieces designed to create luxury and functional living spaces.
-                    </p>
-                    <button className="btn-primary">Shop Now &rarr;</button>
-                </div>
             </div>
         </section>
     );

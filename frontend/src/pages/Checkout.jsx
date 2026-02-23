@@ -64,28 +64,28 @@ const Checkout = () => {
             <div className="container" style={{ marginTop: '120px' }}>
                 <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)', marginBottom: '32px' }}>Checkout</h1>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '40px', alignItems: 'start' }}>
+                <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '40px', alignItems: 'start' }}>
 
                     {/* Checkout Form */}
                     <div style={{ background: 'var(--bg-secondary)', padding: '32px', borderRadius: '16px' }}>
                         <h2 style={{ fontSize: '1.5rem', marginBottom: '24px', color: 'var(--text-primary)' }}>Shipping Information</h2>
 
                         <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <input type="text" name="firstName" placeholder="First Name" required value={formData.firstName} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
                                 <input type="text" name="lastName" placeholder="Last Name" required value={formData.lastName} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
                             </div>
 
                             <input type="email" name="email" placeholder="Email Address" required value={formData.email} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <input type="text" name="mobile1" placeholder="Primary Mobile Number" required value={formData.mobile1} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
                                 <input type="text" name="mobile2" placeholder="Secondary Mobile Number (Optional)" value={formData.mobile2} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
                             </div>
 
                             <input type="text" name="address" placeholder="Shipping Address" required value={formData.address} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                            <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                                 <input type="text" name="city" placeholder="City" required value={formData.city} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
                                 <input type="text" name="zip" placeholder="ZIP Code" required value={formData.zip} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
                                 <input type="text" name="country" placeholder="Country" required value={formData.country} onChange={handleChange} style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />

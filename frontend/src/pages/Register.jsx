@@ -29,7 +29,7 @@ const Register = () => {
             <Navbar />
 
             <div className="container" style={{ marginTop: '120px', display: 'flex', justifyContent: 'center' }}>
-                <div style={{ background: 'var(--card-bg)', borderRadius: '4px', width: '100%', maxWidth: '800px', display: 'flex', overflow: 'hidden', minHeight: '500px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                <div className="flex-col-mobile" style={{ background: 'var(--card-bg)', borderRadius: '4px', width: '100%', maxWidth: '800px', display: 'flex', overflow: 'hidden', minHeight: '500px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
 
                     {/* Left Banner Section */}
                     <div style={{ flex: '1', padding: '40px', background: 'var(--primary-teal-light)', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
