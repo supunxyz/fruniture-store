@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { formatPrice } from '../utils/currency';
 
 const Hero = () => {
     const [heroData, setHeroData] = useState(null);
@@ -45,8 +46,8 @@ const Hero = () => {
                                 <ShoppingBag size={20} /> Shop Now
                             </Link>
                             <div className="new-hero-price">
-                                <span className="current-price">${parseFloat(heroData.current_price).toFixed(0)}</span>
-                                <span className="old-price">${parseFloat(heroData.old_price).toFixed(0)}</span>
+                                <span className="current-price">{formatPrice(parseFloat(heroData.current_price))}</span>
+                                <span className="old-price">{formatPrice(parseFloat(heroData.old_price))}</span>
                             </div>
                         </div>
                     </div>

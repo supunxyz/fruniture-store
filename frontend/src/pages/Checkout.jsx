@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import axios from 'axios';
+import { formatPrice } from '../utils/currency';
 
 const Checkout = () => {
     const { cart, getCartTotal, clearCart } = useCart();
@@ -100,7 +101,7 @@ const Checkout = () => {
                             </select>
 
                             <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ marginTop: '20px', padding: '16px', fontSize: '1.1rem', opacity: isSubmitting ? 0.7 : 1 }}>
-                                {isSubmitting ? 'Processing...' : `Pay $${getCartTotal().toFixed(2)}`}
+                                {isSubmitting ? 'Processing...' : `Pay ${formatPrice(getCartTotal())}`}
                             </button>
                         </form>
                     </div>
@@ -119,14 +120,14 @@ const Checkout = () => {
                                             <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Qty: {item.quantity}</p>
                                         </div>
                                     </div>
-                                    <p style={{ fontWeight: '600', color: 'var(--teal)' }}>${(item.product.price * item.quantity).toFixed(2)}</p>
+                                    <p style={{ fontWeight: '600', color: 'var(--teal)' }}>{formatPrice(item.product.price * item.quantity)}</p>
                                 </div>
                             ))}
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: 'var(--text-muted)' }}>
                             <span>Subtotal</span>
-                            <span>${getCartTotal().toFixed(2)}</span>
+                            <span>{formatPrice(getCartTotal())}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', color: 'var(--text-muted)' }}>
                             <span>Shipping</span>
@@ -135,7 +136,7 @@ const Checkout = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                             <span>Total</span>
-                            <span>${getCartTotal().toFixed(2)}</span>
+                            <span>{formatPrice(getCartTotal())}</span>
                         </div>
                     </div>
 

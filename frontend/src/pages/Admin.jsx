@@ -3,6 +3,7 @@ import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Tras
 import axios from 'axios';
 import Button from '../components/Button';
 import '../admin.css';
+import { formatPrice } from '../utils/currency';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -434,8 +435,8 @@ const Admin = () => {
                                         </td>
                                         <td><span className="table-badge">{p.category}</span></td>
                                         <td>
-                                            <div className="font-bold text-teal">${p.price.toFixed(2)}</div>
-                                            {p.original_price && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>${p.original_price.toFixed(2)}</div>}
+                                            <div className="font-bold text-teal">{formatPrice(p.price)}</div>
+                                            {p.original_price && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(p.original_price)}</div>}
                                         </td>
                                         <td>
                                             {disc ? <span className="table-badge warning">-{disc}%</span> : <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>—</span>}
@@ -537,13 +538,13 @@ const Admin = () => {
                             {/* Price row */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div>
-                                    <div className="panel-section-label">Sale Price * ($)</div>
+                                    <div className="panel-section-label">Sale Price * (Rs.)</div>
                                     <input required type="number" step="0.01" min="0" placeholder="299.00"
                                         value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))}
                                         className="panel-input" />
                                 </div>
                                 <div>
-                                    <div className="panel-section-label">Original Price ($) <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(optional)</span></div>
+                                    <div className="panel-section-label">Original Price (Rs.) <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(optional)</span></div>
                                     <input type="number" step="0.01" min="0" placeholder="399.00"
                                         value={productForm.original_price} onChange={e => setProductForm(f => ({ ...f, original_price: e.target.value }))}
                                         className="panel-input" />
@@ -555,7 +556,7 @@ const Admin = () => {
                                 <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <CheckCircle size={15} />
                                     Discount: <strong>{Math.round((1 - parseFloat(productForm.price) / parseFloat(productForm.original_price)) * 100)}% off</strong>
-                                    &nbsp;— saves ${(parseFloat(productForm.original_price) - parseFloat(productForm.price)).toFixed(2)}
+                                    &nbsp;— saves {formatPrice(parseFloat(productForm.original_price) - parseFloat(productForm.price))}
                                 </div>
                             )}
 
@@ -728,7 +729,7 @@ const Admin = () => {
                                                 {o.items.length} item{o.items.length !== 1 ? 's' : ''}
                                             </span>
                                         </td>
-                                        <td><span className="font-bold text-teal">${o.total_amount.toFixed(2)}</span></td>
+                                        <td><span className="font-bold text-teal">{formatPrice(o.total_amount)}</span></td>
                                         <td>
                                             <span className={`table-badge ${cls}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                                 {icon}{o.status.toUpperCase()}
@@ -838,10 +839,10 @@ const Admin = () => {
                                             <div style={{ fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {item.product_name || `Product #${item.product_id}`}
                                             </div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Qty: {item.quantity} × ${item.price.toFixed(2)}</div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Qty: {item.quantity} × {formatPrice(item.price)}</div>
                                         </div>
                                         <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--primary-teal)', flexShrink: 0 }}>
-                                            ${(item.quantity * item.price).toFixed(2)}
+                                            {formatPrice(item.quantity * item.price)}
                                         </div>
                                     </div>
                                 ))}
@@ -850,7 +851,7 @@ const Admin = () => {
                             {/* Total */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', background: 'var(--bg-secondary)', borderRadius: '10px', marginTop: '12px' }}>
                                 <span style={{ fontWeight: 600, fontSize: '14px' }}>Order Total</span>
-                                <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--primary-teal)' }}>${viewingOrder.total_amount.toFixed(2)}</span>
+                                <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--primary-teal)' }}>{formatPrice(viewingOrder.total_amount)}</span>
                             </div>
                         </div>
 
@@ -1266,11 +1267,11 @@ const Admin = () => {
                     {/* Prices */}
                     <div style={{ display: 'flex', gap: '16px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Current Price ($)</label>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Current Price (Rs.)</label>
                             <input type="number" step="0.01" value={heroData.current_price} onChange={e => setHeroData({ ...heroData, current_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Old Price ($)</label>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Old Price (Rs.)</label>
                             <input type="number" step="0.01" value={heroData.old_price} onChange={e => setHeroData({ ...heroData, old_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                         <div style={{ flex: 1 }}>

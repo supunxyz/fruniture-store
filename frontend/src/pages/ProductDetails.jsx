@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import { Star, ArrowLeft, ShoppingCart, ShieldCheck, Truck, Send, Trash2, MessageSquare } from 'lucide-react';
+import { formatPrice } from '../utils/currency';
 
 /* ── Reusable star renderer ── */
 const StarRow = ({ value, size = 18, interactive = false, onSet }) => {
@@ -219,10 +220,10 @@ const ProductDetails = () => {
                         <h1 style={{ fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '16px', lineHeight: 1.2 }}>{product.name}</h1>
 
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', marginBottom: '32px' }}>
-                            <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-teal)' }}>${product.price.toFixed(2)}</span>
+                            <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-teal)' }}>{formatPrice(product.price)}</span>
                             {product.original_price && (
                                 <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.25rem' }}>
-                                    ${product.original_price.toFixed(2)}
+                                    {formatPrice(product.original_price)}
                                 </span>
                             )}
                             {product.original_price && (

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import PromoBanner from '../components/PromoBanner';
 import { useCart } from '../context/CartContext';
+import { formatPrice } from '../utils/currency';
 
 const Shop = () => {
     const [products, setProducts] = useState([]);
@@ -73,10 +74,10 @@ const Shop = () => {
                                         <span style={{ fontSize: "14px", fontWeight: "600" }}>{product.rating}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span className="product-price">${product.price.toFixed(2)}</span>
+                                        <span className="product-price">{formatPrice(product.price)}</span>
                                         {product.original_price && (
                                             <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '14px' }}>
-                                                ${product.original_price.toFixed(2)}
+                                                {formatPrice(product.original_price)}
                                             </span>
                                         )}
                                     </div>

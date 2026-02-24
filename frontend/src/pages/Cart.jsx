@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { formatPrice } from '../utils/currency';
 
 const Cart = () => {
     const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
@@ -57,7 +58,7 @@ const Cart = () => {
                                     </div>
 
                                     <div style={{ textAlign: 'right', fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--teal)' }}>
-                                        ${(item.product.price * item.quantity).toFixed(2)}
+                                        {formatPrice(item.product.price * item.quantity)}
                                     </div>
                                 </div>
                             ))}
@@ -69,7 +70,7 @@ const Cart = () => {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: 'var(--text-muted)' }}>
                                 <span>Subtotal</span>
-                                <span>${getCartTotal().toFixed(2)}</span>
+                                <span>{formatPrice(getCartTotal())}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', color: 'var(--text-muted)' }}>
                                 <span>Shipping</span>
@@ -80,7 +81,7 @@ const Cart = () => {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
                                 <span>Total</span>
-                                <span>${getCartTotal().toFixed(2)}</span>
+                                <span>{formatPrice(getCartTotal())}</span>
                             </div>
 
                             <button onClick={() => navigate('/checkout')} className="btn-primary" style={{ width: '100%', padding: '16px', fontSize: '1.1rem' }}>
