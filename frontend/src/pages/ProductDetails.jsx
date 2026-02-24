@@ -174,7 +174,7 @@ const ProductDetails = () => {
         <div style={{ paddingBottom: '100px' }}>
             <Navbar />
 
-            <div className="container" style={{ marginTop: '120px' }}>
+            <div className="container" style={{ marginTop: '32px' }}>
                 <Link to="/shop" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', marginBottom: '32px', fontWeight: '500' }}>
                     <ArrowLeft size={18} /> Back to Shop
                 </Link>

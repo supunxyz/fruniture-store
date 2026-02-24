@@ -107,7 +107,7 @@ const Profile = () => {
         <div style={{ paddingBottom: '40px', background: 'var(--bg-light)', minHeight: '100vh' }}>
             <Navbar />
 
-            <div className="container" style={{ marginTop: '120px' }}>
+            <div className="container" style={{ marginTop: '32px' }}>
                 <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)', marginBottom: '32px' }}>My Account</h1>
 
                 <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 3fr)', gap: '40px', alignItems: 'start' }}>

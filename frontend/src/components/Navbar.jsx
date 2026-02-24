@@ -1,75 +1,137 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Heart, ShoppingBag, User, Menu, X, ShoppingCart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, ShoppingBag, User, Menu, X } from 'lucide-react';
+import { NavLink, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+
+const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/shop', label: 'Shop' },
+  { to: '/about', label: 'About Us' },
+  { to: '/contact', label: 'Contact Us' },
+  { to: '/blog', label: 'Blog' },
+];
 
 const Navbar = () => {
   const { cart } = useCart();
   const { user } = useAuth();
-  const cartItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const cartCount = cart.reduce((n, item) => n + item.quantity, 0);
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const menuRef = useRef(null);
+
+  /* ── Scroll glass effect ── */
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* ── Close menu on outside click ── */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  /* ── Lock body scroll while menu open ── */
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
+  const close = () => setMenuOpen(false);
 
   return (
     <>
-      {/* Spacer to prevent layout jumps when navbar becomes fixed */}
-      {scrolled && <div style={{ height: '80px' }}></div>}
+      {/* Permanent spacer so content sits below fixed navbar */}
+      <div style={{ height: '72px' }} aria-hidden="true" />
 
-      <nav className={`navbar container ${scrolled ? 'nav-scrolled' : ''}`}>
-        <Link to="/" className="nav-logo" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <h2><span>F</span>Furnish.</h2>
-        </Link>
+      <header className={`navbar-header${scrolled ? ' scrolled' : ''}`} ref={menuRef}>
+        <div className="navbar-inner container">
 
-        <div className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-          <Link to="/" className="active" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-          <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)}>Shop</Link>
-          <Link to="/about" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
-          <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact Us</Link>
-          <Link to="/blog" onClick={() => setIsMobileMenuOpen(false)}>Blog</Link>
+          {/* ── Logo ── */}
+          <Link to="/" className="navbar-logo" onClick={close}>
+            <span className="navbar-logo-accent">F</span>urnish.
+          </Link>
+
+          {/* ── Desktop links (centre) ── */}
+          <nav className="navbar-desktop-links" aria-label="Main navigation">
+            {NAV_LINKS.map(({ to, label, end }) => (
+              <NavLink key={to} to={to} end={end} className="navbar-link">
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* ── Desktop icons (right) ── */}
+          <div className="navbar-actions">
+            <Link to="/cart" className="navbar-icon-btn" aria-label="Cart">
+              <ShoppingBag size={20} />
+              {cartCount > 0 && <span className="navbar-cart-badge">{cartCount}</span>}
+            </Link>
+            <Link
+              to={user ? '/profile' : '/login'}
+              className="navbar-icon-btn"
+              aria-label="Account"
+            >
+              {user?.profile_picture
+                ? <img src={user.profile_picture} alt="Profile" className="navbar-avatar" />
+                : <User size={20} />}
+            </Link>
+
+            {/* ── Hamburger (mobile only) ── */}
+            <button
+              className="navbar-hamburger"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
-        <div className="nav-icons">
-          <Search className="nav-icon" />
-          <Heart className="nav-icon" />
-          <Link to="/cart" style={{ position: 'relative', display: 'flex', alignItems: 'center', color: 'inherit' }}>
-            <ShoppingBag className="nav-icon" />
-            {cartItemsCount > 0 && (
-              <span className="cart-badge">{cartItemsCount}</span>
-            )}
-          </Link>
-          <Link to={user ? "/profile" : "/login"} style={{ color: 'inherit', display: 'flex', alignItems: 'center' }}>
-            {user && user.profile_picture ? (
-              <img
-                src={user.profile_picture}
-                alt="Profile"
-                style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-teal)' }}
-              />
-            ) : (
-              <User className="nav-icon" />
-            )}
-          </Link>
-        </div>
+        {/* ── Mobile drawer ── */}
+        <div className={`navbar-mobile-drawer${menuOpen ? ' open' : ''}`} aria-hidden={!menuOpen}>
+          <nav className="navbar-mobile-links" aria-label="Mobile navigation">
+            {NAV_LINKS.map(({ to, label, end }) => (
+              <NavLink key={to} to={to} end={end} className="navbar-mobile-link" onClick={close}>
+                {label}
+              </NavLink>
+            ))}
 
-        <button
-          className="mobile-menu-btn"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-      </nav>
+            <div className="navbar-mobile-divider" />
+
+            {/* Mobile cart & account */}
+            <Link to="/cart" className="navbar-mobile-link navbar-mobile-icon-row" onClick={close}>
+              <ShoppingBag size={18} />
+              Cart
+              {cartCount > 0 && <span className="navbar-cart-badge">{cartCount}</span>}
+            </Link>
+            <Link
+              to={user ? '/profile' : '/login'}
+              className="navbar-mobile-link navbar-mobile-icon-row"
+              onClick={close}
+            >
+              <User size={18} />
+              {user ? 'My Profile' : 'Sign In'}
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* ── Backdrop overlay for mobile ── */}
+      {menuOpen && (
+        <div className="navbar-overlay" onClick={close} aria-hidden="true" />
+      )}
     </>
   );
 };

@@ -393,3 +393,150 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ─────────────────────────────────────
+   PRODUCT SLIDE-IN PANEL
+───────────────────────────────────── */
+
+.icon-btn.edit {
+    color: var(--primary-teal);
+}
+
+.icon-btn.edit:hover {
+    background: #e0f2fe;
+    color: #0284C7;
+}
+
+.icon-btn.delete {
+    color: #DC2626;
+}
+
+.icon-btn.delete:hover {
+    background: #fee2e2;
+}
+
+/* Dim overlay behind the panel */
+.product-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(3px);
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* The actual side-panel */
+.product-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 480px;
+    max-width: calc(100vw - 40px);
+    height: 100vh;
+    background: white;
+    box-shadow: -8px 0 48px rgba(0, 0, 0, 0.15);
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0.6;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.product-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.product-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scroll-behavior: smooth;
+}
+
+.product-panel-footer {
+    display: flex;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+}
+
+/* Shared input style inside the panel */
+.panel-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg-secondary, #f8fafc);
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.panel-input:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(30, 120, 145, 0.1);
+}
+
+.panel-section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+/* Drag-and-drop image area */
+.product-drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 14px;
+    padding: 28px 20px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--bg-light, #f8fafc);
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-drop-zone:hover,
+.product-drop-zone.dragover {
+    border-color: var(--primary-teal);
+    background: rgba(30, 120, 145, 0.04);
+}

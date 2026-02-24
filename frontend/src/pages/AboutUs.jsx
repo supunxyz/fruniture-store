@@ -9,7 +9,7 @@ const AboutUs = () => {
         <div style={{ background: 'var(--bg-light)', minHeight: '100vh', paddingBottom: '0' }}>
             <Navbar />
 
-            <div className="container" style={{ marginTop: '120px' }}>
+            <div className="container" style={{ marginTop: '32px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '60px' }}>
                     <h1 style={{ fontSize: '3rem', color: 'var(--text-primary)', marginBottom: '16px' }}>About Furnish</h1>
                     <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>

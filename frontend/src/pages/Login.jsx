@@ -26,7 +26,7 @@ const Login = () => {
         <div style={{ paddingBottom: '40px', background: 'var(--bg-light)', minHeight: '100vh' }}>
             <Navbar />
 
-            <div className="container" style={{ marginTop: '120px', display: 'flex', justifyContent: 'center' }}>
+            <div className="container" style={{ marginTop: '32px', display: 'flex', justifyContent: 'center' }}>
                 <div className="flex-col-mobile" style={{ background: 'var(--card-bg)', borderRadius: '4px', width: '100%', maxWidth: '800px', display: 'flex', overflow: 'hidden', minHeight: '500px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
 
                     {/* Left Banner Section */}

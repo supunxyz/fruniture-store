@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ShoppingCart, Star, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import PromoBanner from '../components/PromoBanner';
 import { useCart } from '../context/CartContext';
 
 const Shop = () => {
@@ -28,8 +29,9 @@ const Shop = () => {
     return (
         <div style={{ paddingBottom: '40px' }}>
             <Navbar />
+            <PromoBanner />
 
-            <div className="container" style={{ marginTop: '120px' }}>
+            <div className="container" style={{ marginTop: '32px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)' }}>All Products</h1>
 

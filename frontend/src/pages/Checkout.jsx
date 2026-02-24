@@ -61,7 +61,7 @@ const Checkout = () => {
         <div style={{ paddingBottom: '40px' }}>
             <Navbar />
 
-            <div className="container" style={{ marginTop: '120px' }}>
+            <div className="container" style={{ marginTop: '32px' }}>
                 <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)', marginBottom: '32px' }}>Checkout</h1>
 
                 <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '40px', alignItems: 'start' }}>
