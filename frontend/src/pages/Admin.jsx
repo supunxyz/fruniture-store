@@ -23,25 +23,25 @@ const Admin = () => {
     }, []);
 
     const fetchData = async () => {
-        try {
-            const [prodRes, userRes, orderRes, heroRes] = await Promise.all([
-                axios.get('http://localhost:8000/api/products'),
-                axios.get('http://localhost:8000/api/users'),
-                axios.get('http://localhost:8000/api/orders'),
-                axios.get('http://localhost:8000/api/hero')
-            ]);
-            setProducts(prodRes.data);
-            setUsers(userRes.data);
-            setOrders(orderRes.data);
-            setHeroData(heroRes.data);
-            setStats({
-                products: prodRes.data.length,
-                users: userRes.data.length,
-                orders: orderRes.data.length
-            });
-        } catch (error) {
-            console.error("Failed to fetch admin data", error);
-        }
+        const [prodRes, userRes, orderRes, heroRes] = await Promise.allSettled([
+            axios.get('http://localhost:8000/api/products'),
+            axios.get('http://localhost:8000/api/users'),
+            axios.get('http://localhost:8000/api/orders'),
+            axios.get('http://localhost:8000/api/hero')
+        ]);
+        if (prodRes.status === 'fulfilled') setProducts(prodRes.value.data);
+        if (userRes.status === 'fulfilled') setUsers(userRes.value.data);
+        if (orderRes.status === 'fulfilled') setOrders(orderRes.value.data);
+        if (heroRes.status === 'fulfilled') setHeroData(heroRes.value.data);
+        setStats({
+            products: prodRes.status === 'fulfilled' ? prodRes.value.data.length : 0,
+            users: userRes.status === 'fulfilled' ? userRes.value.data.length : 0,
+            orders: orderRes.status === 'fulfilled' ? orderRes.value.data.length : 0,
+        });
+        if (prodRes.status === 'rejected') console.error("Failed to fetch products", prodRes.reason);
+        if (userRes.status === 'rejected') console.error("Failed to fetch users", userRes.reason);
+        if (orderRes.status === 'rejected') console.error("Failed to fetch orders", orderRes.reason);
+        if (heroRes.status === 'rejected') console.error("Failed to fetch hero data", heroRes.reason);
     };
 
     const handleDeleteProduct = async (id) => {

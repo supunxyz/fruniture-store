@@ -14,3 +14,4 @@ class User(Base):
     billing_address = Column(String, nullable=True)
     payment_card = Column(String, nullable=True)
     orders = relationship("Order", back_populates="owner")
+    reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
