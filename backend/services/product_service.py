@@ -68,8 +68,8 @@ def upload_product_images(db: Session, product_id: int, files: List[UploadFile])
         new_image = models.ProductImage(product_id=product_id, image_url=image_url)
         db.add(new_image)
         
-        if "unsplash" in db_product.image_url or not db_product.image_url or not db_product.images:
-             db_product.image_url = image_url
+        # Always update the primary image_url with the latest uploaded image
+        db_product.image_url = image_url
 
     db.commit()
     db.refresh(db_product)

@@ -185,7 +185,7 @@ const ProductDetails = () => {
                     {/* Gallery */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div style={{ background: 'var(--bg-secondary)', borderRadius: '24px', padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <img src={activeImage} alt={product.name} style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '16px', transition: 'all 0.3s ease' }} />
+                            <img src={activeImage || 'https://placehold.co/600x500/f5f5f5/aaa?text=No+Image'} alt={product.name} style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '16px', transition: 'all 0.3s ease' }} onError={e => { e.target.src = 'https://placehold.co/600x500/f5f5f5/aaa?text=No+Image'; }} />
                         </div>
                         {product.images && product.images.length > 0 && (
                             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>

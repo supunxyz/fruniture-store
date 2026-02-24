@@ -1,14 +1,17 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from database import engine, Base
-from routers import users, products, orders, features, hero, reviews, promos
+from routers import users, products, orders, features, hero, reviews, promos, blog
 
 # Initialize DB tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+# Ensure uploads directory exists before mounting
+os.makedirs("uploads", exist_ok=True)
 
-from fastapi.staticfiles import StaticFiles
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,3 +30,4 @@ app.include_router(features.router)
 app.include_router(hero.router)
 app.include_router(reviews.router)
 app.include_router(promos.router)
+app.include_router(blog.router)

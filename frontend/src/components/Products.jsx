@@ -29,7 +29,10 @@ const Products = () => {
                     <div key={product.id} className="product-card">
                         <Link to={`/product/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                             <div className="product-image-container">
-                                <img src={product.image_url} alt={product.name} />
+                                {product.image_url && product.image_url !== 'pending'
+                                    ? <img src={product.image_url} alt={product.name} onError={e => { e.target.src = 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'; }} />
+                                    : <img src="https://placehold.co/400x400/f5f5f5/aaa?text=No+Image" alt={product.name} />
+                                }
                             </div>
                         </Link>
 

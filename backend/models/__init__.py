@@ -1,6 +1,7 @@
 from .user import User
-from .product import Product
+from .product import Product, ProductImage
 from .order import Order, OrderItem
 from .hero import HeroSection
 from .review import Review
 from .promo import Promo
+from .blog import BlogPost

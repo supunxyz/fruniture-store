@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Trash2, Star, Megaphone, ToggleLeft, ToggleRight, Search, X, Upload, Eye, AlertTriangle, CheckCircle, ChevronDown, ImageOff } from 'lucide-react';
+import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Trash2, Star, Megaphone, ToggleLeft, ToggleRight, Search, X, Upload, Eye, AlertTriangle, CheckCircle, ChevronDown, ImageOff, MapPin, Phone, Package2, Clock, Truck, XCircle, BookOpen, FileText, Globe, EyeOff } from 'lucide-react';
 import axios from 'axios';
+import Button from '../components/Button';
 import '../admin.css';
 
 const Admin = () => {
@@ -10,7 +11,15 @@ const Admin = () => {
     const [products, setProducts] = useState([]);
     const [users, setUsers] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [viewingOrder, setViewingOrder] = useState(null);  // order detail modal
+    const [orderStatusUpdating, setOrderStatusUpdating] = useState(false);
     const [heroData, setHeroData] = useState(null);
+    const [heroImageFile, setHeroImageFile] = useState(null);
+    const [heroImagePreview, setHeroImagePreview] = useState(null);
+    const [heroImageUploading, setHeroImageUploading] = useState(false);
+    const [heroDragOver, setHeroDragOver] = useState(false);
+    const heroFileInputRef = useRef(null);
+
     const [promos, setPromos] = useState([]);
     const [newPromoText, setNewPromoText] = useState('');
     const [newPromoIcon, setNewPromoIcon] = useState('Tag');
@@ -37,24 +46,39 @@ const Admin = () => {
     const [editingProduct, setEditingProduct] = useState(null);
     const [newProduct, setNewProduct] = useState(EMPTY_PRODUCT);
     const [newProductImages, setNewProductImages] = useState([]);
+    // Blog state
+    const [blogPosts, setBlogPosts] = useState([]);
+    const [blogPanelOpen, setBlogPanelOpen] = useState(false);
+    const [blogPanelMode, setBlogPanelMode] = useState('add');
+    const [blogSaving, setBlogSaving] = useState(false);
+    const [blogDragOver, setBlogDragOver] = useState(false);
+    const [blogImagePreview, setBlogImagePreview] = useState(null);
+    const [blogImageFile, setBlogImageFile] = useState(null);
+    const blogFileInputRef = useRef(null);
+    const EMPTY_POST = { title: '', excerpt: '', content: '', image_url: '', category: '', author: 'Admin', is_published: true };
+    const [blogForm, setBlogForm] = useState(EMPTY_POST);
+    const BLOG_CATEGORIES = ['Design Tips', 'Buying Guide', 'Trends', 'Lifestyle', 'News'];
+
 
     useEffect(() => {
         fetchData();
     }, []);
 
     const fetchData = async () => {
-        const [prodRes, userRes, orderRes, heroRes, promoRes] = await Promise.allSettled([
+        const [prodRes, userRes, orderRes, heroRes, promoRes, blogRes] = await Promise.allSettled([
             axios.get('http://localhost:8000/api/products'),
             axios.get('http://localhost:8000/api/users'),
             axios.get('http://localhost:8000/api/orders'),
             axios.get('http://localhost:8000/api/hero'),
             axios.get('http://localhost:8000/api/promos/all'),
+            axios.get('http://localhost:8000/api/blog/'),
         ]);
         if (prodRes.status === 'fulfilled') setProducts(prodRes.value.data);
         if (userRes.status === 'fulfilled') setUsers(userRes.value.data);
         if (orderRes.status === 'fulfilled') setOrders(orderRes.value.data);
         if (heroRes.status === 'fulfilled') setHeroData(heroRes.value.data);
         if (promoRes.status === 'fulfilled') setPromos(promoRes.value.data);
+        if (blogRes.status === 'fulfilled') setBlogPosts(blogRes.value.data);
         setStats({
             products: prodRes.status === 'fulfilled' ? prodRes.value.data.length : 0,
             users: userRes.status === 'fulfilled' ? userRes.value.data.length : 0,
@@ -65,6 +89,7 @@ const Admin = () => {
         if (orderRes.status === 'rejected') console.error('Failed to fetch orders', orderRes.reason);
         if (heroRes.status === 'rejected') console.error('Failed to fetch hero data', heroRes.reason);
     };
+
 
     const handleDeleteProduct = async (id) => {
         if (!window.confirm("Are you sure you want to delete this product?")) return;
@@ -177,20 +202,22 @@ const Admin = () => {
         setProductSaving(true);
         setProductSaveMsg('');
         try {
-            const payload = {
-                name: productForm.name,
-                price: parseFloat(productForm.price),
-                original_price: productForm.original_price ? parseFloat(productForm.original_price) : null,
-                category: productForm.category,
-                stock: parseInt(productForm.stock),
-                description: productForm.description || null,
-                image_url: productForm.image_url || (productFormFiles.length > 0 ? 'pending' : ''),
-                rating: productPanelMode === 'add' ? 0.0 : (productForm.rating ?? 0.0),
-            };
-
             let saved;
+
             if (productPanelMode === 'add') {
-                const res = await axios.post('http://localhost:8000/api/products', payload);
+                // ── CREATE ──────────────────────────────────────────────
+                const createPayload = {
+                    name: productForm.name,
+                    price: parseFloat(productForm.price),
+                    original_price: productForm.original_price ? parseFloat(productForm.original_price) : null,
+                    category: productForm.category,
+                    stock: parseInt(productForm.stock),
+                    description: productForm.description || null,
+                    // Send null if a file is being uploaded (backend accepts Optional[str])
+                    image_url: productFormFiles.length > 0 ? null : (productForm.image_url || null),
+                    rating: 0.0,
+                };
+                const res = await axios.post('http://localhost:8000/api/products', createPayload);
                 saved = res.data;
                 if (productFormFiles.length > 0) {
                     const fd = new FormData();
@@ -202,11 +229,39 @@ const Admin = () => {
                 }
                 setProducts(prev => [...prev, saved]);
                 setStats(s => ({ ...s, products: s.products + 1 }));
+
             } else {
-                const res = await axios.put(`http://localhost:8000/api/products/${productForm.id}`, payload);
+                // ── EDIT ─────────────────────────────────────────────────
+                // Step 1: If new local files were selected, upload them first
+                // to get the real stored URL before saving other fields.
+                let resolvedImageUrl = productForm.image_url; // keep existing URL by default
+                if (productFormFiles.length > 0) {
+                    const fd = new FormData();
+                    productFormFiles.forEach(f => fd.append('files', f));
+                    const imgRes = await axios.post(
+                        `http://localhost:8000/api/products/${productForm.id}/images`,
+                        fd,
+                        { headers: { 'Content-Type': 'multipart/form-data' } }
+                    );
+                    resolvedImageUrl = imgRes.data.image_url; // real URL from backend
+                }
+
+                // Step 2: Save all field changes with the resolved image URL
+                const editPayload = {
+                    name: productForm.name,
+                    price: parseFloat(productForm.price),
+                    original_price: productForm.original_price ? parseFloat(productForm.original_price) : null,
+                    category: productForm.category,
+                    stock: parseInt(productForm.stock),
+                    description: productForm.description || null,
+                    image_url: resolvedImageUrl,
+                    rating: productForm.rating ?? 0.0,
+                };
+                const res = await axios.put(`http://localhost:8000/api/products/${productForm.id}`, editPayload);
                 saved = res.data;
                 setProducts(prev => prev.map(p => p.id === saved.id ? saved : p));
             }
+
             setProductSaveMsg('success');
             setTimeout(() => {
                 setProductPanelOpen(false);
@@ -224,14 +279,49 @@ const Admin = () => {
 
     const handleUpdateHero = async (e) => {
         e.preventDefault();
+        setHeroImageUploading(true);
         try {
-            const res = await axios.put(`http://localhost:8000/api/hero/${heroData.id}`, heroData);
+            let updatedHero = heroData;
+
+            // If a local file was selected, upload it first
+            if (heroImageFile) {
+                const fd = new FormData();
+                fd.append('file', heroImageFile);
+                const imgRes = await axios.post(
+                    `http://localhost:8000/api/hero/${heroData.id}/image`,
+                    fd,
+                    { headers: { 'Content-Type': 'multipart/form-data' } }
+                );
+                updatedHero = { ...heroData, image_url: imgRes.data.image_url };
+                setHeroData(updatedHero);
+                setHeroImageFile(null);
+                setHeroImagePreview(null);
+            }
+
+            const res = await axios.put(`http://localhost:8000/api/hero/${updatedHero.id}`, updatedHero);
             setHeroData(res.data);
-            alert("Hero settings updated successfully!");
+            alert('Hero settings updated successfully!');
         } catch (error) {
-            console.error("Failed to update hero", error);
-            alert("Error updating hero settings.");
+            console.error('Failed to update hero', error);
+            alert('Error updating hero settings.');
+        } finally {
+            setHeroImageUploading(false);
         }
+    };
+
+    const handleHeroFileChange = (files) => {
+        const file = files[0];
+        if (!file) return;
+        setHeroImageFile(file);
+        setHeroImagePreview(URL.createObjectURL(file));
+        // Clear the URL field since a file takes priority
+        setHeroData(h => ({ ...h, image_url: '' }));
+    };
+
+    const handleHeroImageDrop = (e) => {
+        e.preventDefault();
+        setHeroDragOver(false);
+        handleHeroFileChange(e.dataTransfer.files);
     };
 
     const renderDashboard = () => (
@@ -333,8 +423,8 @@ const Admin = () => {
                                 return (
                                     <tr key={p.id}>
                                         <td>
-                                            {p.image_url
-                                                ? <img src={p.image_url} alt={p.name} className="table-img" style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '10px' }} />
+                                            {p.image_url && p.image_url !== 'pending'
+                                                ? <img src={p.image_url} alt={p.name} className="table-img" style={{ width: '52px', height: '52px', objectFit: 'cover', borderRadius: '10px' }} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                                                 : <div style={{ width: '52px', height: '52px', borderRadius: '10px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageOff size={20} color="var(--text-muted)" /></div>
                                             }
                                         </td>
@@ -391,8 +481,8 @@ const Admin = () => {
                             <button onClick={closeProductPanel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px', color: 'var(--text-muted)' }}><X size={22} /></button>
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={handleSaveProduct} className="product-panel-body">
+                        {/* Form body — scrollable fields only */}
+                        <form id="product-panel-form" onSubmit={handleSaveProduct} className="product-panel-body">
 
                             {/* Image upload area */}
                             <div className="panel-section-label">Product Images</div>
@@ -487,9 +577,13 @@ const Admin = () => {
 
                             {/* Description */}
                             <div className="panel-section-label">Description <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(optional)</span></div>
-                            <textarea rows={4} placeholder="Describe the product materials, dimensions, and features..."
-                                value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))}
-                                className="panel-input" style={{ resize: 'vertical', fontFamily: 'inherit' }} />
+                            <textarea
+                                rows={5}
+                                placeholder="Describe the product materials, dimensions, and features..."
+                                value={productForm.description}
+                                onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))}
+                                className="panel-input panel-textarea"
+                            />
 
                             {/* Save feedback */}
                             {productSaveMsg === 'success' && (
@@ -503,14 +597,15 @@ const Admin = () => {
                                 </div>
                             )}
 
-                            {/* Actions */}
-                            <div className="product-panel-footer">
-                                <button type="button" className="btn-secondary" onClick={closeProductPanel} style={{ flex: 1 }}>Cancel</button>
-                                <button type="submit" className="btn-primary" disabled={productSaving} style={{ flex: 2, opacity: productSaving ? 0.7 : 1 }}>
-                                    {productSaving ? 'Saving...' : productPanelMode === 'add' ? '+ Create Product' : 'Save Changes'}
-                                </button>
-                            </div>
                         </form>
+
+                        {/* Footer — outside the scroll area so it never overlaps content */}
+                        <div className="product-panel-footer">
+                            <Button variant="secondary" type="button" onClick={closeProductPanel} style={{ flex: 1 }}>Cancel</Button>
+                            <Button variant="primary" type="submit" form="product-panel-form" loading={productSaving} style={{ flex: 2 }}>
+                                {productPanelMode === 'add' ? '+ Create Product' : 'Save Changes'}
+                            </Button>
+                        </div>
                     </div>
                 </>
             )}
@@ -560,46 +655,227 @@ const Admin = () => {
         </div>
     );
 
+    const ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+
+    const statusStyle = (status) => {
+        const map = {
+            pending: { cls: 'warning', icon: <Clock size={12} /> },
+            processing: { cls: 'warning', icon: <Package2 size={12} /> },
+            shipped: { cls: '', icon: <Truck size={12} /> },
+            delivered: { cls: 'success', icon: <CheckCircle size={12} /> },
+            cancelled: { cls: 'danger', icon: <XCircle size={12} /> },
+        };
+        return map[status] || { cls: '', icon: null };
+    };
+
+    const handleUpdateOrderStatus = async (orderId, newStatus) => {
+        setOrderStatusUpdating(true);
+        try {
+            const res = await axios.put(`http://localhost:8000/api/orders/${orderId}`, { status: newStatus });
+            setOrders(prev => prev.map(o => o.id === orderId ? res.data : o));
+            if (viewingOrder?.id === orderId) setViewingOrder(res.data);
+        } catch (err) {
+            alert('Failed to update order status.');
+        } finally {
+            setOrderStatusUpdating(false);
+        }
+    };
+
+    const handleDeleteOrder = async (orderId) => {
+        if (!window.confirm('Delete this order permanently?')) return;
+        try {
+            await axios.delete(`http://localhost:8000/api/orders/${orderId}`);
+            setOrders(prev => prev.filter(o => o.id !== orderId));
+            setStats(s => ({ ...s, orders: s.orders - 1 }));
+            if (viewingOrder?.id === orderId) setViewingOrder(null);
+        } catch (err) {
+            alert('Failed to delete order.');
+        }
+    };
+
     const renderOrders = () => (
-        <div className="admin-table-container">
-            <div className="admin-table-header">
-                <h3>Manage Orders</h3>
+        <div style={{ position: 'relative' }}>
+            <div className="admin-table-container">
+                <div className="admin-table-header">
+                    <h3>Order Tracking <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '14px' }}>({orders.length} total)</span></h3>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orders.map(o => {
+                                const { cls, icon } = statusStyle(o.status);
+                                return (
+                                    <tr key={o.id}>
+                                        <td><span style={{ fontWeight: 700 }}>#{o.id}</span></td>
+                                        <td>
+                                            <div style={{ fontSize: '13px' }}>User #{o.user_id}</div>
+                                            {o.mobile1 && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{o.mobile1}</div>}
+                                        </td>
+                                        <td>
+                                            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                                {o.items.length} item{o.items.length !== 1 ? 's' : ''}
+                                            </span>
+                                        </td>
+                                        <td><span className="font-bold text-teal">${o.total_amount.toFixed(2)}</span></td>
+                                        <td>
+                                            <span className={`table-badge ${cls}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                {icon}{o.status.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                            {new Date(o.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td>
+                                            <div className="table-actions">
+                                                <button className="icon-btn edit" title="View details" onClick={() => setViewingOrder(o)}><Eye size={15} /></button>
+                                                <button className="icon-btn delete" title="Delete order" onClick={() => handleDeleteOrder(o.id)}><Trash2 size={15} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {orders.length === 0 && (
+                                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No orders have been placed yet.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <table className="admin-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>User ID</th>
-                        <th>Total Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {orders.map(o => (
-                        <tr key={o.id}>
-                            <td>#{o.id}</td>
-                            <td>User #{o.user_id}</td>
-                            <td className="font-bold text-teal">${o.total_amount.toFixed(2)}</td>
-                            <td>
-                                <span className={`table-badge ${o.status === 'pending' ? 'warning' : 'success'}`}>
-                                    {o.status.toUpperCase()}
-                                </span>
-                            </td>
-                            <td>{new Date(o.created_at).toLocaleDateString()}</td>
-                            <td>
-                                <div className="table-actions">
-                                    <button className="icon-btn edit"><Edit size={16} /></button>
+
+            {/* ── Order Detail Modal ── */}
+            {viewingOrder && (
+                <>
+                    <div className="product-panel-overlay" onClick={() => setViewingOrder(null)} />
+                    <div className="product-panel" style={{ width: '480px' }}>
+                        <div className="product-panel-header">
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '18px' }}>Order #{viewingOrder.id}</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+                                    {new Date(viewingOrder.created_at).toLocaleString()}
+                                </p>
+                            </div>
+                            <button onClick={() => setViewingOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px', color: 'var(--text-muted)' }}><X size={22} /></button>
+                        </div>
+
+                        <div className="product-panel-body">
+
+                            {/* Status changer */}
+                            <div className="panel-section-label">Order Status</div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                                {ORDER_STATUSES.map(s => {
+                                    const active = viewingOrder.status === s;
+                                    const { cls } = statusStyle(s);
+                                    return (
+                                        <button
+                                            key={s}
+                                            disabled={orderStatusUpdating}
+                                            onClick={() => handleUpdateOrderStatus(viewingOrder.id, s)}
+                                            style={{
+                                                padding: '6px 14px', borderRadius: '20px', fontSize: '12px',
+                                                fontWeight: 600, cursor: 'pointer', border: '2px solid',
+                                                transition: 'all 0.2s',
+                                                borderColor: active ? 'var(--primary-teal)' : 'var(--border-color)',
+                                                background: active ? 'var(--primary-teal)' : 'transparent',
+                                                color: active ? 'white' : 'var(--text-muted)',
+                                                opacity: orderStatusUpdating ? 0.6 : 1,
+                                            }}
+                                        >
+                                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Customer info */}
+                            <div className="panel-section-label" style={{ marginTop: '16px' }}>Customer</div>
+                            <div style={{ background: 'var(--bg-secondary)', borderRadius: '10px', padding: '14px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Users size={15} color="var(--text-muted)" />
+                                    <span>User #{viewingOrder.user_id}</span>
                                 </div>
-                            </td>
-                        </tr>
-                    ))}
-                    {orders.length === 0 && (
-                        <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No orders have been placed yet.</td></tr>
-                    )}
-                </tbody>
-            </table>
+                                {viewingOrder.mobile1 && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Phone size={15} color="var(--text-muted)" />
+                                        <span>{viewingOrder.mobile1}{viewingOrder.mobile2 ? ` / ${viewingOrder.mobile2}` : ''}</span>
+                                    </div>
+                                )}
+                                {viewingOrder.address && (
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                        <MapPin size={15} color="var(--text-muted)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                        <span style={{ lineHeight: 1.5 }}>{viewingOrder.address}</span>
+                                    </div>
+                                )}
+                                {viewingOrder.payment_method && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <CheckCircle size={15} color="var(--text-muted)" />
+                                        <span>Payment: <strong>{viewingOrder.payment_method}</strong></span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Order items */}
+                            <div className="panel-section-label" style={{ marginTop: '16px' }}>Items ({viewingOrder.items.length})</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {viewingOrder.items.map(item => (
+                                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-secondary)', borderRadius: '10px', padding: '10px 12px' }}>
+                                        {item.product_image && item.product_image !== 'pending'
+                                            ? <img src={item.product_image} alt={item.product_name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />
+                                            : <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Package size={20} color="var(--text-muted)" /></div>
+                                        }
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {item.product_name || `Product #${item.product_id}`}
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Qty: {item.quantity} × ${item.price.toFixed(2)}</div>
+                                        </div>
+                                        <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--primary-teal)', flexShrink: 0 }}>
+                                            ${(item.quantity * item.price).toFixed(2)}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Total */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', background: 'var(--bg-secondary)', borderRadius: '10px', marginTop: '12px' }}>
+                                <span style={{ fontWeight: 600, fontSize: '14px' }}>Order Total</span>
+                                <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--primary-teal)' }}>${viewingOrder.total_amount.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="product-panel-footer">
+                            <Button
+                                variant="secondary"
+                                type="button"
+                                onClick={() => setViewingOrder(null)}
+                                style={{ flex: 1 }}
+                            >
+                                Close
+                            </Button>
+                            <Button
+                                variant="danger"
+                                type="button"
+                                icon={<Trash2 size={15} />}
+                                onClick={() => handleDeleteOrder(viewingOrder.id)}
+                                style={{ flex: 1 }}
+                            >
+                                Delete Order
+                            </Button>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 
@@ -668,9 +944,9 @@ const Admin = () => {
                         placeholder="e.g. Free Shipping on orders over $500"
                         style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                 </div>
-                <button type="submit" className="btn-primary" style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', flexShrink: 0 }}>
-                    <Plus size={16} /> Add Promo
-                </button>
+                <Button type="submit" icon={<Plus size={16} />} size="sm" style={{ flexShrink: 0 }}>
+                    Add Promo
+                </Button>
             </form>
 
             {/* Table */}
@@ -730,12 +1006,229 @@ const Admin = () => {
                                     style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
                             </div>
                             <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={() => setEditingPromo(null)}>Cancel</button>
-                                <button type="submit" className="btn-primary">Save Changes</button>
+                                <Button variant="secondary" type="button" onClick={() => setEditingPromo(null)}>Cancel</Button>
+                                <Button variant="primary" type="submit">Save Changes</Button>
                             </div>
                         </form>
                     </div>
                 </div>
+            )}
+        </div>
+    );
+
+    // ─── BLOG HANDLERS ──────────────────────────────────────────────────────
+    const closeBlogPanel = () => { setBlogPanelOpen(false); setBlogImagePreview(null); setBlogImageFile(null); };
+
+    const handleBlogFileChange = (files) => {
+        const file = files[0];
+        if (!file) return;
+        setBlogImageFile(file);
+        setBlogImagePreview(URL.createObjectURL(file));
+        setBlogForm(f => ({ ...f, image_url: '' }));
+    };
+
+    const handleSaveBlogPost = async (e) => {
+        e.preventDefault();
+        setBlogSaving(true);
+        try {
+            const editId = blogForm._id;
+            const payload = { title: blogForm.title, excerpt: blogForm.excerpt, content: blogForm.content, image_url: blogForm.image_url || null, category: blogForm.category, author: blogForm.author, is_published: blogForm.is_published };
+            let savedPost;
+            if (blogPanelMode === 'add') {
+                const res = await axios.post('http://localhost:8000/api/blog/', payload);
+                savedPost = res.data;
+                setBlogPosts(prev => [savedPost, ...prev]);
+            } else {
+                const res = await axios.put(`http://localhost:8000/api/blog/${editId}`, payload);
+                savedPost = res.data;
+                setBlogPosts(prev => prev.map(p => p.id === editId ? savedPost : p));
+            }
+            if (blogImageFile && savedPost?.id) {
+                const fd = new FormData();
+                fd.append('file', blogImageFile);
+                const imgRes = await axios.post(`http://localhost:8000/api/blog/${savedPost.id}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                setBlogPosts(prev => prev.map(p => p.id === savedPost.id ? imgRes.data : p));
+            }
+            closeBlogPanel();
+        } catch (err) {
+            alert('Failed to save post: ' + (err.response?.data?.detail || err.message));
+        } finally {
+            setBlogSaving(false);
+        }
+    };
+
+    const handleDeleteBlogPost = async (id) => {
+        if (!window.confirm('Delete this blog post?')) return;
+        try {
+            await axios.delete(`http://localhost:8000/api/blog/${id}`);
+            setBlogPosts(prev => prev.filter(p => p.id !== id));
+        } catch { alert('Failed to delete post.'); }
+    };
+
+    const handleToggleBlogPublish = async (post) => {
+        try {
+            const res = await axios.put(`http://localhost:8000/api/blog/${post.id}`, { is_published: !post.is_published });
+            setBlogPosts(prev => prev.map(p => p.id === post.id ? res.data : p));
+        } catch { alert('Failed to update.'); }
+    };
+
+    const renderBlog = () => (
+        <div style={{ position: 'relative' }}>
+            <div className="admin-table-container">
+                <div className="admin-table-header">
+                    <h3>Blog Posts <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '14px' }}>({blogPosts.length} total)</span></h3>
+                    <Button icon={<Plus size={16} />} onClick={() => { setBlogForm(EMPTY_POST); setBlogPanelMode('add'); setBlogImagePreview(null); setBlogImageFile(null); setBlogPanelOpen(true); }}>New Post</Button>
+                </div>
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th style={{ width: '60px' }}>Image</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {blogPosts.map(post => (
+                            <tr key={post.id}>
+                                <td>
+                                    {post.image_url
+                                        ? <img src={post.image_url} alt={post.title} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} onError={e => e.target.style.display = 'none'} />
+                                        : <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={18} color="var(--text-muted)" /></div>
+                                    }
+                                </td>
+                                <td style={{ maxWidth: '260px' }}>
+                                    <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.title}</div>
+                                    {post.excerpt && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.excerpt}</div>}
+                                </td>
+                                <td>{post.category ? <span className="table-badge">{post.category}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>—</span>}</td>
+                                <td>
+                                    <button onClick={() => handleToggleBlogPublish(post)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: post.is_published ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px' }}>
+                                        {post.is_published ? <><Globe size={15} /> Published</> : <><EyeOff size={15} /> Draft</>}
+                                    </button>
+                                </td>
+                                <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                    {new Date(post.created_at).toLocaleDateString()}
+                                </td>
+                                <td>
+                                    <div className="table-actions">
+                                        <button className="icon-btn edit" title="Edit" onClick={() => { setBlogForm({ ...post, _id: post.id }); setBlogPanelMode('edit'); setBlogImagePreview(post.image_url || null); setBlogImageFile(null); setBlogPanelOpen(true); }}><Edit size={15} /></button>
+                                        <button className="icon-btn delete" title="Delete" onClick={() => handleDeleteBlogPost(post.id)}><Trash2 size={15} /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {blogPosts.length === 0 && (
+                            <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No blog posts yet. Click "New Post" to get started!</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Blog slide-in editor panel */}
+            {blogPanelOpen && (
+                <>
+                    <div className="product-panel-overlay" onClick={closeBlogPanel} />
+                    <div className="product-panel" style={{ width: '560px' }}>
+                        <div className="product-panel-header">
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '18px' }}>{blogPanelMode === 'add' ? 'New Blog Post' : 'Edit Post'}</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>Fill in the details below</p>
+                            </div>
+                            <button onClick={closeBlogPanel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px', color: 'var(--text-muted)' }}><X size={22} /></button>
+                        </div>
+
+                        <div className="product-panel-body">
+                            <form id="blog-panel-form" onSubmit={handleSaveBlogPost} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                                {/* Cover image */}
+                                <div>
+                                    <div className="panel-section-label">Cover Image</div>
+                                    <div
+                                        className={`product-drop-zone${blogDragOver ? ' dragover' : ''}`}
+                                        style={{ cursor: 'pointer', marginBottom: '8px' }}
+                                        onClick={() => blogFileInputRef.current?.click()}
+                                        onDragOver={e => { e.preventDefault(); setBlogDragOver(true); }}
+                                        onDragLeave={() => setBlogDragOver(false)}
+                                        onDrop={e => { e.preventDefault(); setBlogDragOver(false); handleBlogFileChange(e.dataTransfer.files); }}
+                                    >
+                                        {blogImagePreview ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                                <img src={blogImagePreview} alt="Preview" style={{ maxHeight: '130px', maxWidth: '100%', borderRadius: '10px', objectFit: 'cover', border: '2px solid var(--primary-teal)' }} onError={e => e.target.style.display = 'none'} />
+                                                <span style={{ fontSize: '12px', color: 'var(--primary-teal)', fontWeight: 600 }}>Click to change image</span>
+                                            </div>
+                                        ) : (
+                                            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                <Upload size={28} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.4 }} />
+                                                <div style={{ fontSize: '13px', fontWeight: 500 }}>Drop image or click to upload</div>
+                                                <div style={{ fontSize: '12px', marginTop: '4px' }}>PNG, JPG, WEBP</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input ref={blogFileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleBlogFileChange(e.target.files)} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '6px 0' }}>
+                                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>— or paste URL —</span>
+                                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                                    </div>
+                                    <input type="url" placeholder="https://..." value={blogForm.image_url} onChange={e => { setBlogForm(f => ({ ...f, image_url: e.target.value })); setBlogImageFile(null); setBlogImagePreview(e.target.value || null); }} className="panel-input" />
+                                </div>
+
+                                {/* Title */}
+                                <div>
+                                    <label className="panel-label">Title *</label>
+                                    <input type="text" required value={blogForm.title} onChange={e => setBlogForm(f => ({ ...f, title: e.target.value }))} className="panel-input" placeholder="Post title" />
+                                </div>
+
+                                {/* Excerpt */}
+                                <div>
+                                    <label className="panel-label">Excerpt</label>
+                                    <textarea value={blogForm.excerpt} onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))} className="panel-input" rows={3} placeholder="Short summary shown on the blog listing…" style={{ resize: 'vertical', fontFamily: 'inherit' }} />
+                                </div>
+
+                                {/* Content */}
+                                <div>
+                                    <label className="panel-label">Full Content</label>
+                                    <textarea value={blogForm.content} onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))} className="panel-input" rows={8} placeholder="Write the full article here…" style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '13px', lineHeight: 1.7 }} />
+                                </div>
+
+                                {/* Category + Author */}
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <label className="panel-label">Category</label>
+                                        <select value={blogForm.category} onChange={e => setBlogForm(f => ({ ...f, category: e.target.value }))} className="panel-input">
+                                            <option value="">Select…</option>
+                                            {BLOG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label className="panel-label">Author</label>
+                                        <input type="text" value={blogForm.author} onChange={e => setBlogForm(f => ({ ...f, author: e.target.value }))} className="panel-input" placeholder="Admin" />
+                                    </div>
+                                </div>
+
+                                {/* Published toggle */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: '10px' }}>
+                                    <button type="button" onClick={() => setBlogForm(f => ({ ...f, is_published: !f.is_published }))} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: blogForm.is_published ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '14px', padding: 0 }}>
+                                        {blogForm.is_published ? <ToggleRight size={26} /> : <ToggleLeft size={26} />}
+                                        {blogForm.is_published ? 'Published — visible on the blog' : 'Draft — hidden from visitors'}
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+
+                        <div className="product-panel-footer">
+                            <Button variant="secondary" type="button" onClick={closeBlogPanel} style={{ flex: 1 }}>Cancel</Button>
+                            <Button variant="primary" type="submit" form="blog-panel-form" loading={blogSaving} style={{ flex: 2 }}>
+                                {blogPanelMode === 'add' ? '+ Publish Post' : 'Save Changes'}
+                            </Button>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );
@@ -746,66 +1239,130 @@ const Admin = () => {
                 <h3>Hero Section Settings</h3>
             </div>
             {heroData ? (
-                <form onSubmit={handleUpdateHero} style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '600px' }}>
+                <form onSubmit={handleUpdateHero} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '640px' }}>
 
+                    {/* Title row */}
                     <div style={{ display: 'flex', gap: '16px' }}>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Title (First Line)</label>
-                            <input type="text" value={heroData.title_black} onChange={e => setHeroData({ ...heroData, title_black: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <input type="text" value={heroData.title_black} onChange={e => setHeroData({ ...heroData, title_black: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px', color: 'var(--primary-teal)' }}>Title (Highlighted)</label>
-                            <input type="text" value={heroData.title_colored} onChange={e => setHeroData({ ...heroData, title_colored: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <input type="text" value={heroData.title_colored} onChange={e => setHeroData({ ...heroData, title_colored: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Title (End Line)</label>
-                            <input type="text" value={heroData.title_black_2} onChange={e => setHeroData({ ...heroData, title_black_2: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <input type="text" value={heroData.title_black_2} onChange={e => setHeroData({ ...heroData, title_black_2: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                     </div>
 
+                    {/* Subtitle */}
                     <div>
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Subtitle</label>
-                        <textarea value={heroData.subtitle} onChange={e => setHeroData({ ...heroData, subtitle: e.target.value })} rows={4} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontFamily: 'inherit' }} />
+                        <textarea value={heroData.subtitle} onChange={e => setHeroData({ ...heroData, subtitle: e.target.value })} rows={4} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontFamily: 'inherit', resize: 'vertical' }} />
                     </div>
 
+                    {/* Prices */}
                     <div style={{ display: 'flex', gap: '16px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Current Price</label>
-                            <input type="number" step="0.01" value={heroData.current_price} onChange={e => setHeroData({ ...heroData, current_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Current Price ($)</label>
+                            <input type="number" step="0.01" value={heroData.current_price} onChange={e => setHeroData({ ...heroData, current_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Old Price</label>
-                            <input type="number" step="0.01" value={heroData.old_price} onChange={e => setHeroData({ ...heroData, old_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Old Price ($)</label>
+                            <input type="number" step="0.01" value={heroData.old_price} onChange={e => setHeroData({ ...heroData, old_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '16px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Rating (e.g. 4.8)</label>
-                            <input type="number" step="0.1" value={heroData.rating} onChange={e => setHeroData({ ...heroData, rating: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Rating</label>
+                            <input type="number" step="0.1" min="0" max="5" value={heroData.rating} onChange={e => setHeroData({ ...heroData, rating: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Reviews Count</label>
-                            <input type="number" value={heroData.reviews_count} onChange={e => setHeroData({ ...heroData, reviews_count: parseInt(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                            <input type="number" value={heroData.reviews_count} onChange={e => setHeroData({ ...heroData, reviews_count: parseInt(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
                         </div>
                     </div>
 
+                    {/* ── Image section ── */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Image URL</label>
-                        <input type="text" value={heroData.image_url} onChange={e => setHeroData({ ...heroData, image_url: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
-                        {heroData.image_url && (
-                            <div style={{ marginTop: '16px', background: 'var(--bg-light)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                                <img src={heroData.image_url} alt="Hero Preview" style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain' }} />
-                            </div>
+                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: '600', fontSize: '14px' }}>Hero Image</label>
+
+                        {/* Drag-and-drop zone */}
+                        <div
+                            className={`product-drop-zone${heroDragOver ? ' dragover' : ''}`}
+                            style={{ marginBottom: '14px', cursor: 'pointer' }}
+                            onDragOver={e => { e.preventDefault(); setHeroDragOver(true); }}
+                            onDragLeave={() => setHeroDragOver(false)}
+                            onDrop={handleHeroImageDrop}
+                            onClick={() => heroFileInputRef.current?.click()}
+                        >
+                            {heroImagePreview ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                                    <img src={heroImagePreview} alt="New hero preview" style={{ maxHeight: '140px', maxWidth: '100%', borderRadius: '10px', objectFit: 'contain', border: '2px solid var(--primary-teal)' }} />
+                                    <span style={{ fontSize: '12px', color: 'var(--primary-teal)', fontWeight: 600 }}>✓ New image ready — click Save Changes to apply</span>
+                                </div>
+                            ) : heroData.image_url ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                    <img src={heroData.image_url} alt="Current hero" style={{ maxHeight: '120px', maxWidth: '100%', borderRadius: '10px', objectFit: 'contain', opacity: 0.85 }} />
+                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current image — drop or click to replace</span>
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <Upload size={32} style={{ margin: '0 auto 10px', display: 'block', opacity: 0.45 }} />
+                                    <div style={{ fontSize: '14px', fontWeight: 500 }}>Drop image here or click to upload</div>
+                                    <div style={{ fontSize: '12px', marginTop: '4px' }}>PNG, JPG, WEBP up to 10 MB</div>
+                                </div>
+                            )}
+                        </div>
+                        <input
+                            ref={heroFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={e => handleHeroFileChange(e.target.files)}
+                        />
+
+                        {/* Clear selected file */}
+                        {heroImageFile && (
+                            <button
+                                type="button"
+                                onClick={() => { setHeroImageFile(null); setHeroImagePreview(null); }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#dc2626', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                                <X size={13} /> Remove selected file
+                            </button>
                         )}
+
+                        {/* Divider */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '2px 0 10px' }}>
+                            <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>— or paste image URL —</span>
+                            <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                        </div>
+
+                        {/* URL input fallback */}
+                        <input
+                            type="url"
+                            placeholder="https://example.com/hero-image.png"
+                            value={heroData.image_url}
+                            onChange={e => {
+                                setHeroData(h => ({ ...h, image_url: e.target.value }));
+                                setHeroImageFile(null);
+                                setHeroImagePreview(null);
+                            }}
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '13px' }}
+                        />
                     </div>
 
-                    <div style={{ marginTop: '16px' }}>
-                        <button type="submit" className="btn-primary" style={{ padding: '12px 24px', borderRadius: '8px' }}>Save Changes</button>
+                    {/* Save button */}
+                    <div style={{ marginTop: '4px' }}>
+                        <Button type="submit" loading={heroImageUploading}>
+                            Save Changes
+                        </Button>
                     </div>
                 </form>
             ) : (
-                <p>Loading settings...</p>
+                <p style={{ color: 'var(--text-muted)' }}>Loading settings...</p>
             )}
         </div>
     );
@@ -835,6 +1392,9 @@ const Admin = () => {
                     <button className={activeTab === 'promos' ? 'active' : ''} onClick={() => setActiveTab('promos')}>
                         <Megaphone size={20} /> Promotions
                     </button>
+                    <button className={activeTab === 'blog' ? 'active' : ''} onClick={() => setActiveTab('blog')}>
+                        <BookOpen size={20} /> Blog Posts
+                    </button>
                 </nav>
                 <div className="admin-footer">
                     <button className="logout-btn" onClick={() => window.location.href = "/"}>
@@ -851,6 +1411,7 @@ const Admin = () => {
                         {activeTab === 'orders' && 'Order Tracking'}
                         {activeTab === 'hero' && 'Storefront Settings'}
                         {activeTab === 'promos' && 'Promo Banner Management'}
+                        {activeTab === 'blog' && 'Blog Management'}
                     </h2>
                     <div className="admin-user-profile">
                         <div className="admin-avatar">A</div>
@@ -867,6 +1428,7 @@ const Admin = () => {
                     {activeTab === 'orders' && renderOrders()}
                     {activeTab === 'hero' && renderHeroSettings()}
                     {activeTab === 'promos' && renderPromos()}
+                    {activeTab === 'blog' && renderBlog()}
                 </div>
             </main>
         </div>

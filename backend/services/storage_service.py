@@ -28,17 +28,19 @@ def upload_file(file: UploadFile, prefix: str = "") -> str:
     Uploads a file directly to the configured S3 compatible bucket, 
     or saves it locally if no bucket credentials are found.
     """
-    ext = file.filename.split('.')[-1]
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
     filename = f"{prefix}_{uuid.uuid4().hex}.{ext}"
     
     if s3_client:
         try:
+            # Reset stream in case it was partially read
+            file.file.seek(0)
             # Upload to S3 Bucket
             s3_client.upload_fileobj(
                 file.file,
                 S3_BUCKET_NAME,
                 filename,
-                ExtraArgs={"ContentType": file.content_type}
+                ExtraArgs={"ContentType": file.content_type or "image/jpeg"}
             )
             # Depending on if you use custom endpoints (like R2), the URL format can change
             if S3_ENDPOINT_URL:
@@ -51,7 +53,9 @@ def upload_file(file: UploadFile, prefix: str = "") -> str:
         # Fallback to local storage
         os.makedirs("uploads", exist_ok=True)
         file_path = os.path.join("uploads", filename)
+        # Reset stream pointer before reading (important for multipart uploads)
+        file.file.seek(0)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        return f"http://127.0.0.1:8000/uploads/{filename}"
+        return f"http://localhost:8000/uploads/{filename}"
