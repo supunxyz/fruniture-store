@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  # ── FastAPI Backend ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: furni_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000" # Direct access to the API (optional; Nginx handles it internally)
+    volumes:
+      - ./backend/uploads:/app/uploads # Persist uploaded images between restarts
+      - ./backend/furni.db:/app/furni.db # Persist the SQLite database
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - furni_net
+
+  # ── React / Vite Frontend ────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: furni_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80" # Visit http://localhost in your browser
+    depends_on:
+      - backend
+    networks:
+      - furni_net
+
+# ── Shared network ──────────────────────────────────────────────────────────
+networks:
+  furni_net:
+    driver: bridge

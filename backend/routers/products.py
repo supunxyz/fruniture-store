@@ -34,6 +34,14 @@ def update_product(product_id: int, product_update: schemas.ProductUpdate, db: S
 def upload_product_images(product_id: int, files: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     return product_service.upload_product_images(db, product_id, files)
 
+@router.delete("/{product_id}/images/{image_id}", response_model=schemas.Product)
+def delete_product_image(product_id: int, image_id: int, db: Session = Depends(get_db)):
+    return product_service.delete_product_image(db, product_id, image_id)
+
+@router.put("/{product_id}/images/{image_id}/set-primary", response_model=schemas.Product)
+def set_primary_image(product_id: int, image_id: int, db: Session = Depends(get_db)):
+    return product_service.set_primary_image(db, product_id, image_id)
+
 @router.delete("/{product_id}")
 def delete_product(product_id: int, db: Session = Depends(get_db)):
     product_service.delete_product(db, product_id)

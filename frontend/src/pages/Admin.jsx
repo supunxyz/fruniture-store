@@ -170,7 +170,7 @@ const Admin = () => {
     };
 
     const openEditPanel = (product) => {
-        setProductForm({ ...product, original_price: product.original_price ?? '', description: product.description ?? '' });
+        setProductForm({ ...product, original_price: product.original_price ?? '', description: product.description ?? '', images: product.images ?? [] });
         setProductFormFiles([]);
         setProductFormFilePreviews([]);
         setProductSaveMsg('');
@@ -485,34 +485,112 @@ const Admin = () => {
                         {/* Form body — scrollable fields only */}
                         <form id="product-panel-form" onSubmit={handleSaveProduct} className="product-panel-body">
 
-                            {/* Image upload area */}
+                            {/* ── Gallery Manager ── */}
                             <div className="panel-section-label">Product Images</div>
-                            <div
-                                className={`product-drop-zone ${dragOver ? 'dragover' : ''}`}
-                                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                                onDragLeave={() => setDragOver(false)}
-                                onDrop={handleDrop}
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                {productFormFilePreviews.length > 0 ? (
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                        {productFormFilePreviews.map((src, i) => (
-                                            <img key={i} src={src} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '2px solid var(--primary-teal)' }} />
+
+                            {/* Existing saved images (edit mode) */}
+                            {productPanelMode === 'edit' && productForm.images && productForm.images.length > 0 && (
+                                <div style={{ marginBottom: '10px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Saved images — click <strong>Set Primary</strong> to change main image, <strong>✕</strong> to delete</div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {productForm.images.map(img => (
+                                            <div key={img.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                <div style={{ position: 'relative', display: 'inline-block' }}>
+                                                    <img
+                                                        src={img.image_url}
+                                                        alt=""
+                                                        style={{
+                                                            width: '84px', height: '84px', objectFit: 'cover', borderRadius: '8px',
+                                                            border: productForm.image_url === img.image_url
+                                                                ? '3px solid var(--primary-teal)'
+                                                                : '2px solid var(--border-color)'
+                                                        }}
+                                                    />
+                                                    {/* Primary badge */}
+                                                    {productForm.image_url === img.image_url && (
+                                                        <div style={{ position: 'absolute', top: '4px', left: '4px', background: 'var(--primary-teal)', color: 'white', fontSize: '9px', fontWeight: 700, padding: '2px 5px', borderRadius: '4px', letterSpacing: '0.5px' }}>PRIMARY</div>
+                                                    )}
+                                                    {/* Delete button */}
+                                                    <button type="button" title="Remove image"
+                                                        onClick={async () => {
+                                                            if (!window.confirm('Remove this image?')) return;
+                                                            try {
+                                                                const r = await axios.delete(`http://localhost:8000/api/products/${productForm.id}/images/${img.id}`);
+                                                                setProductForm(f => ({ ...f, image_url: r.data.image_url, images: r.data.images }));
+                                                                setProducts(prev => prev.map(p => p.id === r.data.id ? r.data : p));
+                                                            } catch { alert('Failed to remove image.'); }
+                                                        }}
+                                                        style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(220,38,38,0.87)', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', color: 'white', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                                                    >×</button>
+                                                </div>
+                                                {/* Set Primary button — only shown when not already primary */}
+                                                {productForm.image_url !== img.image_url && (
+                                                    <button type="button"
+                                                        onClick={async () => {
+                                                            try {
+                                                                const r = await axios.put(`http://localhost:8000/api/products/${productForm.id}/images/${img.id}/set-primary`);
+                                                                setProductForm(f => ({ ...f, image_url: img.image_url, images: r.data.images }));
+                                                                setProducts(prev => prev.map(p => p.id === r.data.id ? r.data : p));
+                                                            } catch { alert('Failed to set primary image.'); }
+                                                        }}
+                                                        style={{ fontSize: '10px', fontWeight: 600, color: 'var(--primary-teal)', background: 'var(--bg-secondary)', border: '1px solid var(--primary-teal)', borderRadius: '6px', padding: '2px 6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                    >Set Primary</button>
+                                                )}
+                                            </div>
                                         ))}
                                     </div>
-                                ) : productForm.image_url ? (
-                                    <img src={productForm.image_url} alt="Preview" style={{ maxHeight: '100px', maxWidth: '100%', borderRadius: '8px', objectFit: 'contain' }} />
-                                ) : (
-                                    <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                        <Upload size={32} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.5 }} />
-                                        <div style={{ fontSize: '14px', fontWeight: 500 }}>Drop images here or click to upload</div>
-                                        <div style={{ fontSize: '12px', marginTop: '4px' }}>PNG, JPG up to 5MB each</div>
-                                    </div>
-                                )}
-                            </div>
-                            <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={e => handleFileChange(e.target.files)} />
+                                </div>
+                            )}
 
-                            <div className="panel-section-label" style={{ marginTop: '8px' }}>— or paste image URL —</div>
+                            {/* New files queued for upload */}
+                            {productFormFilePreviews.length > 0 && (
+                                <div style={{ marginBottom: '10px' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--primary-teal)', marginBottom: '6px', fontWeight: 600 }}>📎 {productFormFilePreviews.length} new file(s) ready to upload</div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {productFormFilePreviews.map((src, i) => (
+                                            <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                                                <img src={src} alt="" style={{ width: '84px', height: '84px', objectFit: 'cover', borderRadius: '8px', border: '2px dashed var(--primary-teal)', opacity: 0.85 }} />
+                                                <button type="button" title="Remove from queue"
+                                                    onClick={() => {
+                                                        const newFiles = productFormFiles.filter((_, fi) => fi !== i);
+                                                        const newPreviews = productFormFilePreviews.filter((_, pi) => pi !== i);
+                                                        setProductFormFiles(newFiles);
+                                                        setProductFormFilePreviews(newPreviews);
+                                                    }}
+                                                    style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(220,38,38,0.85)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                                                >×</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Drop zone to add more images */}
+                            <div
+                                className={`product-drop-zone ${dragOver ? 'dragover' : ''}`}
+                                style={{ minHeight: '80px', padding: '16px' }}
+                                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                                onDragLeave={() => setDragOver(false)}
+                                onDrop={e => { e.preventDefault(); setDragOver(false); const newFiles = [...productFormFiles, ...Array.from(e.dataTransfer.files)]; setProductFormFiles(newFiles); setProductFormFilePreviews(newFiles.map(f => URL.createObjectURL(f))); setProductForm(f => ({ ...f, image_url: '' })); }}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <Upload size={24} style={{ margin: '0 auto 6px', display: 'block', opacity: 0.4 }} />
+                                    <div style={{ fontSize: '13px', fontWeight: 500 }}>Drop images or click to add more</div>
+                                    <div style={{ fontSize: '11px', marginTop: '2px' }}>PNG, JPG, WEBP · multiple allowed</div>
+                                </div>
+                            </div>
+                            <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: 'none' }}
+                                onChange={e => {
+                                    const newFiles = [...productFormFiles, ...Array.from(e.target.files)];
+                                    setProductFormFiles(newFiles);
+                                    setProductFormFilePreviews(newFiles.map(f => URL.createObjectURL(f)));
+                                    setProductForm(f => ({ ...f, image_url: '' }));
+                                    e.target.value = '';
+                                }}
+                            />
+
+                            <div className="panel-section-label" style={{ marginTop: '4px' }}>— or paste image URL —</div>
                             <input
                                 type="url" placeholder="https://example.com/image.jpg"
                                 value={productForm.image_url}

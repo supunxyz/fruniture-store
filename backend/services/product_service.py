@@ -83,3 +83,41 @@ def delete_product(db: Session, product_id: int):
     db.delete(db_product)
     db.commit()
     return True
+
+def delete_product_image(db: Session, product_id: int, image_id: int):
+    db_product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db_image = db.query(models.ProductImage).filter(
+        models.ProductImage.id == image_id,
+        models.ProductImage.product_id == product_id
+    ).first()
+    if not db_image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    db.delete(db_image)
+    # If deleted image was the primary, update to next available
+    if db_product.image_url == db_image.image_url:
+        remaining = db.query(models.ProductImage).filter(
+            models.ProductImage.product_id == product_id,
+            models.ProductImage.id != image_id
+        ).first()
+        db_product.image_url = remaining.image_url if remaining else None
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
+def set_primary_image(db: Session, product_id: int, image_id: int):
+    db_product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db_image = db.query(models.ProductImage).filter(
+        models.ProductImage.id == image_id,
+        models.ProductImage.product_id == product_id
+    ).first()
+    if not db_image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    db_product.image_url = db_image.image_url
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+

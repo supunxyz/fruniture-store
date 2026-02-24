@@ -34,7 +34,7 @@ const AboutUs = () => {
                     </div>
                 </div>
 
-                <div style={{ background: 'var(--primary-teal)', borderRadius: '24px', padding: '60px 40px', textAlign: 'center', color: 'white' }}>
+                <div className="about-cta" style={{ background: 'var(--primary-teal)', borderRadius: '24px', padding: '60px 40px', textAlign: 'center', color: 'white' }}>
                     <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Ready to transform your space?</h2>
                     <p style={{ fontSize: '1.1rem', opacity: 0.9, marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
                         Explore our latest collections and find the perfect pieces for your home.

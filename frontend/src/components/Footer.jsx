@@ -4,10 +4,10 @@ import { Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide-react'
 const Footer = () => {
     return (
         <footer style={{ background: '#111827', color: '#9CA3AF', paddingTop: '60px', paddingBottom: '30px', marginTop: '60px' }}>
-            <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px', marginBottom: '40px' }}>
+            <div className="container footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '40px', marginBottom: '40px' }}>
 
                 {/* Brand Section */}
-                <div>
+                <div className="footer-brand">
                     <h2 style={{ color: 'white', fontSize: '1.8rem', marginBottom: '16px', fontWeight: 'bold' }}><span>F</span>Furnish.</h2>
                     <p style={{ lineHeight: '1.6', marginBottom: '24px', maxWidth: '300px' }}>
                         Transforming houses into homes with carefully curated, high-quality furniture pieces designed for modern living.

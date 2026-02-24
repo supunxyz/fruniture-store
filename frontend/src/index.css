@@ -1433,3 +1433,454 @@ button {
     justify-content: center;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   FULL-SITE RESPONSIVE SYSTEM
+   Breakpoints:
+     1024px  — tablet landscape
+      768px  — tablet portrait / large phone
+      480px  — small phone
+════════════════════════════════════════════════════════════════ */
+
+/* ── Shared helpers ─────────────────────────────────── */
+.resp-stack {
+  display: flex;
+  flex-direction: column !important;
+}
+
+.resp-full {
+  width: 100% !important;
+}
+
+/* ══════════════════════════════════════
+   TABLET  (≤ 1024px)
+══════════════════════════════════════ */
+@media (max-width: 1024px) {
+
+  /* Container padding */
+  .container {
+    padding: 0 24px;
+  }
+
+  /* Profile: tighten side-by-side layout */
+  .profile-grid {
+    grid-template-columns: 220px 1fr !important;
+    gap: 24px !important;
+  }
+
+  /* Checkout: side-by-side → stack */
+  .checkout-grid,
+  [class*="responsive-grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Shop header */
+  .shop-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Product detail */
+  .product-detail-grid {
+    gap: 36px !important;
+  }
+
+  /* Blog grid → 2 cols */
+  .blog-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Footer columns → 2×2 */
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ══════════════════════════════════════
+   MOBILE  (≤ 768px)
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ─ Global ─ */
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Page top-margin (compensate for fixed Navbar 72 px) */
+  .page-top {
+    margin-top: 24px !important;
+  }
+
+  /* ─ Typography ─ */
+  h1 {
+    font-size: clamp(1.6rem, 5vw, 2.2rem) !important;
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 4vw, 1.8rem) !important;
+  }
+
+  h3 {
+    font-size: clamp(1.1rem, 3vw, 1.4rem) !important;
+  }
+
+  /* ─ Navbar (handled by existing rules, this ensures drawer works) ─ */
+  .navbar-desktop-links {
+    display: none;
+  }
+
+  .navbar-hamburger {
+    display: flex;
+  }
+
+  .navbar-mobile-drawer {
+    display: block;
+  }
+
+  /* ─ Shop Page ─ */
+  .shop-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  .shop-header h1 {
+    margin-bottom: 0;
+  }
+
+  .shop-filter-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .shop-filter-row select {
+    flex: 1;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .product-card {
+    padding: 16px !important;
+  }
+
+  .product-image-container {
+    height: 160px !important;
+  }
+
+  /* ─ Cart Page ─ */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .cart-item-mobile {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  .cart-item-mobile>div:first-child {
+    width: 100% !important;
+    height: 220px !important;
+  }
+
+  /* ─ Checkout Page ─ */
+  .checkout-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Profile Page ─ */
+  .profile-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .profile-sidebar-sticky {
+    position: static !important;
+  }
+
+  /* Horizontal tab bar on mobile */
+  .profile-nav {
+    flex-direction: row !important;
+    overflow-x: auto;
+    gap: 8px !important;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .profile-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-nav button {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Order stepper — compress on small screens */
+  .order-stepper-label {
+    font-size: 0.6rem !important;
+  }
+
+  /* ─ Login / Register ─ */
+  .flex-col-mobile {
+    flex-direction: column !important;
+  }
+
+  /* Hide left decorative banner on small screens */
+  .auth-banner {
+    display: none !important;
+  }
+
+  .auth-form-side {
+    padding: 28px 20px !important;
+  }
+
+  /* ─ Product Details ─ */
+  .product-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .product-detail-grid h1 {
+    font-size: 1.8rem !important;
+  }
+
+  .product-detail-grid .feature-badges {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Blog Page ─ */
+  .blog-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .blog-header h1 {
+    font-size: 2rem !important;
+  }
+
+  /* ─ About Us ─ */
+  .about-cta {
+    padding: 40px 20px !important;
+  }
+
+  /* ─ Contact Us ─ */
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Footer ─ */
+  .footer {
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 32px !important;
+    text-align: left;
+  }
+
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  /* ─ Hero (new style) ─ */
+  .new-hero-container {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 24px 0 !important;
+    gap: 24px !important;
+  }
+
+  .new-hero-content {
+    align-items: center !important;
+    text-align: center !important;
+    flex: 1 1 auto !important;
+  }
+
+  .new-hero-image-side {
+    order: unset;
+  }
+
+  .floating-image {
+    max-width: 260px !important;
+  }
+
+  /* ─ Features carousel ─ */
+  .features-section {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 16px !important;
+    margin: 0 -16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .features-section::-webkit-scrollbar {
+    display: none;
+  }
+
+  .feature-card {
+    flex: 0 0 auto !important;
+    width: 200px !important;
+    scroll-snap-align: center;
+  }
+
+  /* ─ Cards row (home page) ─ */
+  .cards-row {
+    flex-direction: column !important;
+  }
+
+  .image-card {
+    height: 240px !important;
+  }
+
+  /* ─ Reviews ─ */
+  .reviews-summary {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .reviews-avg-block {
+    flex-direction: row !important;
+    gap: 14px !important;
+  }
+
+  .review-body {
+    padding-left: 0 !important;
+    margin-top: 8px;
+  }
+
+  .review-submit-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* ══════════════════════════════════════
+   SMALL PHONE  (≤ 480px)
+══════════════════════════════════════ */
+@media (max-width: 480px) {
+
+  .container {
+    padding: 0 12px;
+  }
+
+  /* Product grid → single column */
+  .product-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .product-card {
+    padding: 14px !important;
+  }
+
+  .product-image-container {
+    height: 180px !important;
+  }
+
+  /* Blog → single column (already set at 768, keep) */
+  .blog-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Footer → single column */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  /* Cart item image — portrait phones */
+  .cart-item-mobile>div:first-child {
+    height: 180px !important;
+  }
+
+  /* Profile order stepper — hide labels, show only dots */
+  .order-stepper-label {
+    display: none !important;
+  }
+
+  .order-stepper-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Auth panels */
+  .auth-form-side {
+    padding: 20px 16px !important;
+  }
+
+  /* Product detail heading */
+  .product-detail-grid h1 {
+    font-size: 1.5rem !important;
+  }
+
+  /* Bigger tap targets for buttons */
+  .btn-primary {
+    padding: 14px 20px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .btn-cart {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  /* About CTA section */
+  .about-cta {
+    padding: 32px 16px !important;
+  }
+
+  .about-cta h2 {
+    font-size: 1.4rem !important;
+  }
+
+  /* Hero */
+  .new-hero-container {
+    padding: 16px 0 !important;
+  }
+
+  .floating-image {
+    max-width: 90% !important;
+  }
+
+  .hero-title {
+    font-size: clamp(1.8rem, 7vw, 2.4rem) !important;
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem !important;
+  }
+
+  /* Navbar logo sizing */
+  .navbar-logo {
+    font-size: 1.15rem !important;
+  }
+
+  /* Shop filter row */
+  .shop-filter-row select {
+    width: 100%;
+  }
+
+  /* Checkout form inner grids → single col */
+  .checkout-name-row,
+  .checkout-mobile-row,
+  .checkout-address-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Profile order card header text */
+  .order-card-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+}

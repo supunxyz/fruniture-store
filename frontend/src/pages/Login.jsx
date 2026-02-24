@@ -30,7 +30,7 @@ const Login = () => {
                 <div className="flex-col-mobile" style={{ background: 'var(--card-bg)', borderRadius: '4px', width: '100%', maxWidth: '800px', display: 'flex', overflow: 'hidden', minHeight: '500px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
 
                     {/* Left Banner Section */}
-                    <div style={{ flex: '1', padding: '40px', background: 'var(--primary-teal-light)', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+                    <div className="auth-banner" style={{ flex: '1', padding: '40px', background: 'var(--primary-teal-light)', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
                         <h2 style={{ fontSize: '2rem', marginBottom: '16px', fontWeight: 'bold' }}>Welcome to Furnish.</h2>
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '1rem', color: 'rgba(255, 255, 255, 0.9)' }}>
                             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -52,7 +52,7 @@ const Login = () => {
                     </div>
 
                     {/* Right Form Section */}
-                    <div style={{ flex: '1.2', padding: '40px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'white' }}>
+                    <div className="auth-form-side" style={{ flex: '1.2', padding: '40px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'white' }}>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '24px' }}>
                             <h2 style={{ fontSize: '1.25rem', color: 'var(--text-dark)', margin: 0 }}>Login</h2>

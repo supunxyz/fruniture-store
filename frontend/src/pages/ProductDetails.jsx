@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../context/CartContext';
@@ -89,6 +89,10 @@ const ProductDetails = () => {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(null);
+    const [activeIndex, setActiveIndex] = useState(0);
+    // Touch swipe
+    const touchStartX = useRef(null);
+    const touchEndX = useRef(null);
 
     // Reviews state
     const [reviews, setReviews] = useState([]);
@@ -106,7 +110,12 @@ const ProductDetails = () => {
     /* Fetch product */
     useEffect(() => {
         axios.get(`http://127.0.0.1:8000/api/products/${id}`)
-            .then(res => { setProduct(res.data); setActiveImage(res.data.image_url); setLoading(false); })
+            .then(res => {
+                setProduct(res.data);
+                setActiveImage(res.data.image_url);
+                setActiveIndex(0);
+                setLoading(false);
+            })
             .catch(() => setLoading(false));
     }, [id]);
 
@@ -161,12 +170,37 @@ const ProductDetails = () => {
         } catch { }
     };
 
+    /* Gallery navigation */
+    const allImages = product
+        ? (product.images && product.images.length > 0
+            ? product.images.map(i => i.image_url)
+            : [product.image_url].filter(Boolean))
+        : [];
+
+    const goTo = useCallback((idx) => {
+        if (!allImages.length) return;
+        const clamped = ((idx % allImages.length) + allImages.length) % allImages.length;
+        setActiveIndex(clamped);
+        setActiveImage(allImages[clamped]);
+    }, [allImages]);
+
     /* Add to cart with feedback */
     const handleAddToCart = () => {
         addToCart(product);
         setAddedToCart(true);
         setTimeout(() => setAddedToCart(false), 2000);
     };
+
+    /* Keyboard arrows */
+    useEffect(() => {
+        if (allImages.length <= 1) return;
+        const onKey = (e) => {
+            if (e.key === 'ArrowLeft') goTo(activeIndex - 1);
+            if (e.key === 'ArrowRight') goTo(activeIndex + 1);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [activeIndex, goTo, allImages.length]);
 
     if (loading) return <div style={{ padding: '120px 20px', textAlign: 'center', fontSize: '1.2rem' }}>Loading product details...</div>;
     if (!product) return <div style={{ padding: '120px 20px', textAlign: 'center' }}>Product not found. <Link to="/shop" style={{ color: 'var(--primary-teal)' }}>Back to Shop</Link></div>;
@@ -184,20 +218,67 @@ const ProductDetails = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'start' }} className="product-detail-grid">
 
                     {/* Gallery */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ background: 'var(--bg-secondary)', borderRadius: '24px', padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <img src={activeImage || 'https://placehold.co/600x500/f5f5f5/aaa?text=No+Image'} alt={product.name} style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '16px', transition: 'all 0.3s ease' }} onError={e => { e.target.src = 'https://placehold.co/600x500/f5f5f5/aaa?text=No+Image'; }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                        {/* Main image with arrows */}
+                        <div
+                            style={{ position: 'relative', background: 'var(--bg-secondary)', borderRadius: '24px', overflow: 'hidden', aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}
+                            onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+                            onTouchMove={e => { touchEndX.current = e.touches[0].clientX; }}
+                            onTouchEnd={() => {
+                                if (touchStartX.current === null || touchEndX.current === null) return;
+                                const diff = touchStartX.current - touchEndX.current;
+                                if (Math.abs(diff) > 40) diff > 0 ? goTo(activeIndex + 1) : goTo(activeIndex - 1);
+                                touchStartX.current = null;
+                                touchEndX.current = null;
+                            }}
+                        >
+                            <img
+                                key={activeImage}
+                                src={activeImage || 'https://placehold.co/600x500/f5f5f5/aaa?text=No+Image'}
+                                alt={product.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '32px', transition: 'opacity 0.25s ease', borderRadius: '16px' }}
+                                onError={e => { e.target.src = 'https://placehold.co/600x500/f5f5f5/aaa?text=No+Image'; }}
+                            />
+
+                            {/* Arrows — only show if multiple images */}
+                            {allImages.length > 1 && (
+                                <>
+                                    <button onClick={() => goTo(activeIndex - 1)}
+                                        style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', color: 'white', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', transition: 'background 0.2s' }}
+                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
+                                        onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.35)'}
+                                    >&#8249;</button>
+                                    <button onClick={() => goTo(activeIndex + 1)}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', color: 'white', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', transition: 'background 0.2s' }}
+                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
+                                        onMouseOut={e => e.currentTarget.style.background = 'rgba(0,0,0,0.35)'}
+                                    >&#8250;</button>
+
+                                    {/* Counter badge */}
+                                    <div style={{ position: 'absolute', bottom: '12px', right: '14px', background: 'rgba(0,0,0,0.45)', color: 'white', fontSize: '12px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
+                                        {activeIndex + 1} / {allImages.length}
+                                    </div>
+
+                                    {/* Dot indicators */}
+                                    <div style={{ position: 'absolute', bottom: '14px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '6px' }}>
+                                        {allImages.map((_, i) => (
+                                            <div key={i} onClick={() => goTo(i)}
+                                                style={{ width: activeIndex === i ? '20px' : '7px', height: '7px', borderRadius: '4px', background: activeIndex === i ? 'var(--primary-teal)' : 'rgba(255,255,255,0.6)', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
-                        {product.images && product.images.length > 0 && (
-                            <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
-                                <div onClick={() => setActiveImage(product.image_url)}
-                                    style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'var(--bg-secondary)', cursor: 'pointer', border: activeImage === product.image_url ? '2px solid var(--primary-teal)' : '2px solid transparent', overflow: 'hidden', flexShrink: 0 }}>
-                                    <img src={product.image_url} alt="Main" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </div>
-                                {product.images.map(img => (
-                                    <div key={img.id} onClick={() => setActiveImage(img.image_url)}
-                                        style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'var(--bg-secondary)', cursor: 'pointer', border: activeImage === img.image_url ? '2px solid var(--primary-teal)' : '2px solid transparent', overflow: 'hidden', flexShrink: 0 }}>
-                                        <img src={img.image_url} alt={`Gallery ${img.id}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+                        {/* Thumbnail strip */}
+                        {allImages.length > 1 && (
+                            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+                                {allImages.map((url, i) => (
+                                    <div key={i} onClick={() => goTo(i)}
+                                        style={{ width: '72px', height: '72px', flexShrink: 0, borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: activeIndex === i ? '2.5px solid var(--primary-teal)' : '2.5px solid transparent', opacity: activeIndex === i ? 1 : 0.65, transition: 'all 0.2s', boxSizing: 'border-box' }}>
+                                        <img src={url} alt={`thumb-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </div>
                                 ))}
                             </div>

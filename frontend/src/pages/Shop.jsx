@@ -33,10 +33,10 @@ const Shop = () => {
             <PromoBanner />
 
             <div className="container" style={{ marginTop: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div className="shop-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)' }}>All Products</h1>
 
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="shop-filter-row" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <Filter size={20} color="var(--text-muted)" />
                         <select
                             value={selectedCategory}
