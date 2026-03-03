@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 from database import get_db
 import schemas
 import models
-from services import order_service
+from services import order_service, email_service
 
 router = APIRouter(
     prefix="/api/orders",
@@ -15,7 +15,8 @@ def _load_order(db: Session, order_id: int):
     order = (
         db.query(models.Order)
         .options(
-            joinedload(models.Order.items).joinedload(models.OrderItem.product)
+            joinedload(models.Order.items).joinedload(models.OrderItem.product),
+            joinedload(models.Order.owner)
         )
         .filter(models.Order.id == order_id)
         .first()
@@ -25,8 +26,23 @@ def _load_order(db: Session, order_id: int):
     return order
 
 @router.post("/", response_model=schemas.Order)
-def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
-    return order_service.create_order(db, order)
+def create_order(order: schemas.OrderCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    db_order = order_service.create_order(db, order)
+    
+    # Reload fully to get user email and products
+    loaded_order = _load_order(db, db_order.id)
+    
+    items_text = "\n".join([f"- {item.quantity}x {item.product.name}" for item in loaded_order.items])
+    if loaded_order.owner and loaded_order.owner.email:
+        background_tasks.add_task(
+            email_service.send_order_email,
+            user_email=loaded_order.owner.email,
+            order_id=loaded_order.id,
+            status=loaded_order.status,
+            items_text=items_text
+        )
+        
+    return loaded_order
 
 @router.get("/", response_model=List[schemas.Order])
 def read_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -45,10 +61,23 @@ def read_order(order_id: int, db: Session = Depends(get_db)):
     return _load_order(db, order_id)
 
 @router.put("/{order_id}", response_model=schemas.Order)
-def update_order(order_id: int, order_update: schemas.OrderUpdate, db: Session = Depends(get_db)):
+def update_order(order_id: int, order_update: schemas.OrderUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     result = order_service.update_order(db, order_id, order_update)
     # Reload with product data so response is fully populated
-    return _load_order(db, order_id)
+    loaded_order = _load_order(db, order_id)
+    
+    # If the status was updated, send an email
+    if order_update.status and loaded_order.owner and loaded_order.owner.email:
+        items_text = "\n".join([f"- {item.quantity}x {item.product.name}" for item in loaded_order.items])
+        background_tasks.add_task(
+            email_service.send_order_email,
+            user_email=loaded_order.owner.email,
+            order_id=loaded_order.id,
+            status=loaded_order.status,
+            items_text=items_text
+        )
+
+    return loaded_order
 
 @router.delete("/{order_id}")
 def delete_order(order_id: int, db: Session = Depends(get_db)):

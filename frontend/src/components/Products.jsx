@@ -27,22 +27,23 @@ const Products = () => {
             <h2 className="section-title">Our Best Selling Product</h2>
             <div className="product-grid">
                 {products.map(product => (
-                    <div key={product.id} className="product-card">
-                        <Link to={`/product/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                            <div className="product-image-container">
-                                {product.image_url && product.image_url !== 'pending'
-                                    ? <img src={product.image_url} alt={product.name} onError={e => { e.target.src = 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'; }} />
-                                    : <img src="https://placehold.co/400x400/f5f5f5/aaa?text=No+Image" alt={product.name} />
-                                }
-                            </div>
-                        </Link>
+                    <Link
+                        key={product.id}
+                        to={`/product/${product.id}`}
+                        className="product-card"
+                        style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+                    >
+                        <div className="product-image-container">
+                            {product.image_url && product.image_url !== 'pending'
+                                ? <img src={product.image_url} alt={product.name} onError={e => { e.target.src = 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'; }} />
+                                : <img src="https://placehold.co/400x400/f5f5f5/aaa?text=No+Image" alt={product.name} />
+                            }
+                        </div>
 
                         <div className="product-info">
                             <div>
                                 <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: "8px 0 4px" }}>{product.category}</p>
-                                <Link to={`/product/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                                    <h3 className="product-name">{product.name}</h3>
-                                </Link>
+                                <h3 className="product-name">{product.name}</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
                                     <Star size={16} fill="#D4AF37" color="#D4AF37" />
                                     <span style={{ fontSize: "14px", fontWeight: "600" }}>{product.rating}</span>
@@ -61,11 +62,19 @@ const Products = () => {
                                     </p>
                                 )}
                             </div>
-                            <button className="btn-cart" onClick={() => addToCart(product)} title="Add to Cart">
+                            <button
+                                className="btn-cart"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    addToCart(product);
+                                }}
+                                title="Add to Cart"
+                            >
                                 <ShoppingCart size={18} />
                             </button>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </section>

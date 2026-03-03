@@ -10,6 +10,7 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+    phone_number = Column(String, nullable=True)
     profile_picture = Column(String, nullable=True)
     billing_address = Column(String, nullable=True)
     payment_card = Column(String, nullable=True)

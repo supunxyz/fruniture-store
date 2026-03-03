@@ -52,23 +52,24 @@ const Shop = () => {
 
                 <div className="product-grid">
                     {filteredProducts.map(product => (
-                        <div key={product.id} className="product-card">
-                            <Link to={`/product/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                                <div className="product-image-container">
-                                    <img
-                                        src={product.image_url && product.image_url !== 'pending' ? product.image_url : 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'}
-                                        alt={product.name}
-                                        onError={e => { e.target.src = 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'; }}
-                                    />
-                                </div>
-                            </Link>
+                        <Link
+                            key={product.id}
+                            to={`/product/${product.id}`}
+                            className="product-card"
+                            style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+                        >
+                            <div className="product-image-container">
+                                <img
+                                    src={product.image_url && product.image_url !== 'pending' ? product.image_url : 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'}
+                                    alt={product.name}
+                                    onError={e => { e.target.src = 'https://placehold.co/400x400/f5f5f5/aaa?text=No+Image'; }}
+                                />
+                            </div>
 
                             <div className="product-info">
                                 <div>
                                     <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: "8px 0 4px" }}>{product.category}</p>
-                                    <Link to={`/product/${product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                                        <h3 className="product-name">{product.name}</h3>
-                                    </Link>
+                                    <h3 className="product-name">{product.name}</h3>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
                                         <Star size={16} fill="#D4AF37" color="#D4AF37" />
                                         <span style={{ fontSize: "14px", fontWeight: "600" }}>{product.rating}</span>
@@ -87,11 +88,19 @@ const Shop = () => {
                                         </p>
                                     )}
                                 </div>
-                                <button className="btn-cart" onClick={() => addToCart(product)} title="Add to Cart">
+                                <button
+                                    className="btn-cart"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        addToCart(product);
+                                    }}
+                                    title="Add to Cart"
+                                >
                                     <ShoppingCart size={18} />
                                 </button>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                     {filteredProducts.length === 0 && (
                         <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>

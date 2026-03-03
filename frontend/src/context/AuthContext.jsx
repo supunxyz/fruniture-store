@@ -29,9 +29,9 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = async (username, email, password) => {
+    const register = async (username, email, password, phone_number) => {
         try {
-            const res = await axios.post('http://localhost:8000/api/users/', { username, email, password });
+            const res = await axios.post('http://localhost:8000/api/users/', { username, email, password, phone_number });
             setUser(res.data); // auto-login after register
             return { success: true };
         } catch (error) {

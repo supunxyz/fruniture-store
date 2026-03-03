@@ -675,16 +675,18 @@ button {
 }
 
 .new-hero-price .current-price {
-  font-size: 1.8rem;
-  font-weight: bold;
+  font-size: 1.6rem;
+  font-weight: 700;
   color: var(--text-dark);
   line-height: 1;
 }
 
 .new-hero-price .old-price {
   font-size: 1rem;
+  font-weight: 7;
   color: var(--text-muted);
   text-decoration: line-through;
+  line-height: 1;
 }
 
 .new-hero-image-side {
@@ -846,7 +848,7 @@ button {
 
 .btn-primary {
   background-color: var(--primary-teal);
-  color: white;
+  color: rgb(255, 255, 255);
   padding: 12px 24px;
   border-radius: 30px;
   font-weight: 500;
@@ -890,6 +892,8 @@ button {
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 .product-card:hover {
@@ -939,12 +943,20 @@ button {
 .btn-cart {
   background: var(--primary-teal);
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+  outline: none;
 }
 
 .btn-cart:hover {

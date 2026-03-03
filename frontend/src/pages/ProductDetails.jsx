@@ -300,16 +300,20 @@ const ProductDetails = () => {
 
                         <h1 style={{ fontSize: '2.5rem', color: 'var(--text-primary)', marginBottom: '16px', lineHeight: 1.2 }}>{product.name}</h1>
 
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px', marginBottom: '32px' }}>
-                            <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-teal)' }}>{formatPrice(product.price)}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '32px' }}>
+                            {/* Row 1: discounted price + OFF badge */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-teal)' }}>{formatPrice(product.price)}</span>
+                                {product.original_price && (
+                                    <span style={{ background: '#dcfce7', color: '#16a34a', fontSize: '13px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px' }}>
+                                        {Math.round((1 - product.price / product.original_price) * 100)}% OFF
+                                    </span>
+                                )}
+                            </div>
+                            {/* Row 2: original strikethrough price */}
                             {product.original_price && (
-                                <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.25rem' }}>
+                                <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.1rem' }}>
                                     {formatPrice(product.original_price)}
-                                </span>
-                            )}
-                            {product.original_price && (
-                                <span style={{ background: '#dcfce7', color: '#16a34a', fontSize: '13px', fontWeight: '700', padding: '4px 10px', borderRadius: '20px' }}>
-                                    {Math.round((1 - product.price / product.original_price) * 100)}% OFF
                                 </span>
                             )}
                         </div>

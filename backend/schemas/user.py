@@ -7,11 +7,13 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    phone_number: Optional[str] = None
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     is_active: Optional[bool] = None
+    phone_number: Optional[str] = None
     profile_picture: Optional[str] = None
     billing_address: Optional[str] = None
     payment_card: Optional[str] = None
@@ -20,6 +22,7 @@ class User(UserBase):
     id: int
     is_active: bool
     is_admin: bool
+    phone_number: Optional[str] = None
     profile_picture: Optional[str] = None
     billing_address: Optional[str] = None
     payment_card: Optional[str] = None
