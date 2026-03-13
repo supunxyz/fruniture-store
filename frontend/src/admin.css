@@ -347,50 +347,339 @@
     border-radius: 8px;
 }
 
+/* ── Mobile card grid (hidden on desktop) ── */
+.admin-mobile-cards {
+    display: none;
+}
+
+/* ── Hamburger + mobile dropdown (hidden on desktop) ── */
+.admin-hamburger {
+    display: none;
+}
+
+.admin-mobile-menu {
+    display: none;
+}
+
 /* ADMIN RESPONSIVE STYLES */
 @media screen and (max-width: 900px) {
     .admin-layout {
         flex-direction: column;
         height: auto;
+        min-height: 100vh;
     }
 
+    /* ── Sidebar → Compact top bar ── */
     .admin-sidebar {
         width: 100%;
         border-right: none;
+        border-bottom: none;
+        padding: 0;
+        background: white;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    /* Logo + Back to Store row */
+    .admin-logo {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        margin-bottom: 0;
         border-bottom: 1px solid var(--border-color);
-        padding: 16px;
     }
 
+    .admin-logo h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    /* ── Hide desktop nav on mobile, show hamburger ── */
     .admin-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
+        display: none;
     }
 
-    .admin-nav button {
-        flex: 1;
+    .admin-hamburger {
+        display: flex;
+        align-items: center;
         justify-content: center;
-        text-align: center;
+        width: 40px;
+        height: 40px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-primary, #1a1a1a);
+        border-radius: 8px;
+        transition: background 0.15s;
+        flex-shrink: 0;
     }
 
-    .admin-header {
-        padding: 0 20px;
+    .admin-hamburger:hover {
+        background: var(--bg-light, #f1f5f9);
+    }
+
+    /* ── Dropdown menu panel ── */
+    .admin-mobile-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        z-index: 200;
+        display: flex;
         flex-direction: column;
-        gap: 16px;
-        height: auto;
-        padding-top: 16px;
-        padding-bottom: 16px;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease, box-shadow 0.3s ease;
+        pointer-events: none;
     }
 
+    .admin-mobile-menu.open {
+        max-height: 600px;
+        pointer-events: auto;
+    }
+
+    /* ── Each nav row ── */
+    .admin-mobile-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 15px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        border-left: 3px solid transparent;
+        transition: all 0.15s ease;
+    }
+
+    .admin-mobile-menu-item:hover {
+        background: var(--bg-light, #f8fafc);
+        color: var(--primary-teal);
+    }
+
+    .admin-mobile-menu-item.active {
+        color: var(--primary-teal);
+        background: rgba(30, 120, 145, 0.06);
+        border-left-color: var(--primary-teal);
+        font-weight: 600;
+    }
+
+    .admin-mobile-menu-divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: 4px 0;
+    }
+
+    .admin-mobile-menu-back {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #EF4444;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s;
+    }
+
+    .admin-mobile-menu-back:hover {
+        background: #fef2f2;
+    }
+
+    /* ── Hide footer on mobile ── */
+    .admin-footer {
+        display: none;
+    }
+
+    /* ── Header compact row ── */
+    .admin-header {
+        padding: 12px 16px;
+        height: auto;
+        flex-direction: row;
+        gap: 12px;
+        background: var(--bg-light);
+        border-bottom: none;
+    }
+
+    .admin-header h2 {
+        font-size: 16px;
+        flex: 1;
+    }
+
+
+    /* ── Main content area ── */
     .admin-content {
-        padding: 20px;
+        padding: 12px;
     }
 
     .admin-table-container {
         overflow-x: auto;
+        padding: 14px;
+        border-radius: 14px;
     }
 
     .admin-grid {
         grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .admin-stat-card {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    /* ── Hide tables, show cards ── */
+    .admin-table-container .admin-table-desktop {
+        display: none;
+    }
+
+    .admin-mobile-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* ── Mobile Card Base ── */
+    .mobile-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.2s;
+    }
+
+    .mobile-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Card header (image + name) */
+    .mobile-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .mobile-card-header img {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .mobile-card-header .card-img-placeholder {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        background: var(--bg-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .mobile-card-title {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .mobile-card-title h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mobile-card-title .card-subtitle {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Card info rows */
+    .mobile-card-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+    }
+
+    .mobile-card-body.single-col {
+        grid-template-columns: 1fr;
+    }
+
+    .card-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .card-info-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .card-info-value {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary, #1a1a1a);
+    }
+
+    /* Card footer (actions) */
+    .mobile-card-footer {
+        display: flex;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .mobile-card-footer .icon-btn {
+        flex: 1;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    /* ── Toolbar tweaks ── */
+    .admin-table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .admin-table-header h3 {
+        font-size: 16px;
+    }
+
+    /* ── Modal panel responsive ── */
+    .product-panel {
+        width: calc(100vw - 24px) !important;
+        max-height: calc(100vh - 40px);
     }
 }
 

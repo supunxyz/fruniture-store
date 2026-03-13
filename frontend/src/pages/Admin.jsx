@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Trash2, Star, Megaphone, ToggleLeft, ToggleRight, Search, X, Upload, Eye, AlertTriangle, CheckCircle, ChevronDown, ImageOff, MapPin, Phone, Package2, Clock, Truck, XCircle, BookOpen, FileText, Globe, EyeOff } from 'lucide-react';
+import { LayoutDashboard, Package, Users, ShoppingCart, LogOut, Plus, Edit, Trash2, Star, Megaphone, ToggleLeft, ToggleRight, Search, X, Upload, Eye, AlertTriangle, CheckCircle, ChevronDown, ImageOff, MapPin, Phone, Package2, Clock, Truck, XCircle, BookOpen, FileText, Globe, EyeOff, Menu } from 'lucide-react';
 import axios from 'axios';
 import Button from '../components/Button';
 import '../admin.css';
@@ -7,6 +7,7 @@ import { formatPrice } from '../utils/currency';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [stats, setStats] = useState({ products: 0, users: 0, orders: 0 });
 
     const [products, setProducts] = useState([]);
@@ -402,8 +403,8 @@ const Admin = () => {
                     </div>
                 </div>
 
-                {/* ── Table ── */}
-                <div style={{ overflowX: 'auto' }}>
+                {/* ── Table (desktop) ── */}
+                <div className="admin-table-desktop" style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
                         <thead>
                             <tr>
@@ -463,6 +464,58 @@ const Admin = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* ── Mobile Cards (responsive) ── */}
+                <div className="admin-mobile-cards">
+                    {filteredProducts.map(p => {
+                        const disc = discountPct(p);
+                        const stock = stockBadge(p.stock);
+                        return (
+                            <div className="mobile-card" key={p.id}>
+                                <div className="mobile-card-header">
+                                    {p.image_url && p.image_url !== 'pending'
+                                        ? <img src={p.image_url} alt={p.name} onError={e => { e.target.style.display = 'none'; }} />
+                                        : <div className="card-img-placeholder"><ImageOff size={22} color="var(--text-muted)" /></div>
+                                    }
+                                    <div className="mobile-card-title">
+                                        <h4>{p.name}</h4>
+                                        <div className="card-subtitle">#{p.id} · {p.category}</div>
+                                    </div>
+                                </div>
+                                <div className="mobile-card-body">
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Price</span>
+                                        <span className="card-info-value" style={{ color: 'var(--primary-teal)', fontWeight: 700 }}>{formatPrice(p.price)}</span>
+                                    </div>
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Stock</span>
+                                        <span className="card-info-value"><span className={`table-badge ${stock.cls}`}>{stock.label}</span></span>
+                                    </div>
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Rating</span>
+                                        <span className="card-info-value" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Star size={13} fill="#D4AF37" color="#D4AF37" /> {p.rating?.toFixed(1) ?? '0.0'}
+                                        </span>
+                                    </div>
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Discount</span>
+                                        <span className="card-info-value">
+                                            {disc ? <span className="table-badge warning">-{disc}%</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="mobile-card-footer">
+                                    <button className="icon-btn edit" title="Edit" onClick={() => openEditPanel(p)}><Edit size={15} /></button>
+                                    <button className="icon-btn" title="View" style={{ color: 'var(--text-muted)' }} onClick={() => window.open(`/product/${p.id}`, '_blank')}><Eye size={15} /></button>
+                                    <button className="icon-btn delete" title="Delete" onClick={() => handleDeleteProduct(p.id)}><Trash2 size={15} /></button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {filteredProducts.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No products match your search.</div>
+                    )}
                 </div>
             </div>
 
@@ -696,41 +749,83 @@ const Admin = () => {
             <div className="admin-table-header">
                 <h3>Manage Users</h3>
             </div>
-            <table className="admin-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map(u => (
-                        <tr key={u.id}>
-                            <td>#{u.id}</td>
-                            <td className="font-medium">{u.username}</td>
-                            <td>{u.email}</td>
-                            <td>
-                                <span className={`table-badge ${u.is_active ? 'success' : 'danger'}`}>
-                                    {u.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                            <td>{u.is_admin ? 'Admin' : 'Customer'}</td>
-                            <td>
-                                <div className="table-actions">
-                                    <button className="icon-btn edit"><Edit size={16} /></button>
-                                </div>
-                            </td>
+            <div className="admin-table-desktop">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Role</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                    {users.length === 0 && (
-                        <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No users found. Try creating an account!</td></tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {users.map(u => (
+                            <tr key={u.id}>
+                                <td>#{u.id}</td>
+                                <td className="font-medium">{u.username}</td>
+                                <td>{u.email}</td>
+                                <td>
+                                    <span className={`table-badge ${u.is_active ? 'success' : 'danger'}`}>
+                                        {u.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>{u.is_admin ? 'Admin' : 'Customer'}</td>
+                                <td>
+                                    <div className="table-actions">
+                                        <button className="icon-btn edit"><Edit size={16} /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {users.length === 0 && (
+                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No users found. Try creating an account!</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+            {/* ── Mobile Cards ── */}
+            <div className="admin-mobile-cards">
+                {users.map(u => (
+                    <div className="mobile-card" key={u.id}>
+                        <div className="mobile-card-header">
+                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-teal)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', flexShrink: 0 }}>
+                                {u.username?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <div className="mobile-card-title">
+                                <h4>{u.username}</h4>
+                                <div className="card-subtitle">{u.email}</div>
+                            </div>
+                        </div>
+                        <div className="mobile-card-body">
+                            <div className="card-info-item">
+                                <span className="card-info-label">ID</span>
+                                <span className="card-info-value">#{u.id}</span>
+                            </div>
+                            <div className="card-info-item">
+                                <span className="card-info-label">Role</span>
+                                <span className="card-info-value">{u.is_admin ? 'Admin' : 'Customer'}</span>
+                            </div>
+                            <div className="card-info-item">
+                                <span className="card-info-label">Status</span>
+                                <span className="card-info-value">
+                                    <span className={`table-badge ${u.is_active ? 'success' : 'danger'}`}>
+                                        {u.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        <div className="mobile-card-footer">
+                            <button className="icon-btn edit"><Edit size={16} /></button>
+                        </div>
+                    </div>
+                ))}
+                {users.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No users found. Try creating an account!</div>
+                )}
+            </div>
         </div>
     );
 
@@ -779,7 +874,7 @@ const Admin = () => {
                     <h3>Order Tracking <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '14px' }}>({orders.length} total)</span></h3>
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
+                <div className="admin-table-desktop" style={{ overflowX: 'auto' }}>
                     <table className="admin-table">
                         <thead>
                             <tr>
@@ -830,6 +925,55 @@ const Admin = () => {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* ── Mobile Cards ── */}
+                <div className="admin-mobile-cards">
+                    {orders.map(o => {
+                        const { cls, icon } = statusStyle(o.status);
+                        return (
+                            <div className="mobile-card" key={o.id}>
+                                <div className="mobile-card-header">
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <ShoppingCart size={20} color="var(--primary-teal)" />
+                                    </div>
+                                    <div className="mobile-card-title">
+                                        <h4>Order #{o.id}</h4>
+                                        <div className="card-subtitle">User #{o.user_id}{o.mobile1 ? ` · ${o.mobile1}` : ''}</div>
+                                    </div>
+                                </div>
+                                <div className="mobile-card-body">
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Total</span>
+                                        <span className="card-info-value" style={{ color: 'var(--primary-teal)', fontWeight: 700 }}>{formatPrice(o.total_amount)}</span>
+                                    </div>
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Items</span>
+                                        <span className="card-info-value">{o.items.length} item{o.items.length !== 1 ? 's' : ''}</span>
+                                    </div>
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Status</span>
+                                        <span className="card-info-value">
+                                            <span className={`table-badge ${cls}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                {icon}{o.status.toUpperCase()}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div className="card-info-item">
+                                        <span className="card-info-label">Date</span>
+                                        <span className="card-info-value">{new Date(o.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                                <div className="mobile-card-footer">
+                                    <button className="icon-btn edit" title="View details" onClick={() => setViewingOrder(o)}><Eye size={15} /></button>
+                                    <button className="icon-btn delete" title="Delete order" onClick={() => handleDeleteOrder(o.id)}><Trash2 size={15} /></button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {orders.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No orders have been placed yet.</div>
+                    )}
                 </div>
             </div>
 
@@ -1028,43 +1172,81 @@ const Admin = () => {
                 </Button>
             </form>
 
-            {/* Table */}
-            <table className="admin-table">
-                <thead>
-                    <tr>
-                        <th style={{ width: 40 }}>#</th>
-                        <th style={{ width: 100 }}>Icon</th>
-                        <th>Text</th>
-                        <th style={{ width: 100 }}>Status</th>
-                        <th style={{ width: 100 }}>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {promos.map(p => (
-                        <tr key={p.id}>
-                            <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>#{p.id}</td>
-                            <td><span className="table-badge">{p.icon}</span></td>
-                            <td className="font-medium">{p.text}</td>
-                            <td>
-                                <button onClick={() => handleTogglePromo(p)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: p.is_active ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px' }}>
-                                    {p.is_active ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
-                                    {p.is_active ? 'Active' : 'Hidden'}
-                                </button>
-                            </td>
-                            <td>
-                                <div className="table-actions">
-                                    <button className="icon-btn edit" onClick={() => setEditingPromo({ ...p })}><Edit size={16} /></button>
-                                    <button className="icon-btn delete" onClick={() => handleDeletePromo(p.id)}><Trash2 size={16} /></button>
-                                </div>
-                            </td>
+            {/* Table (desktop) */}
+            <div className="admin-table-desktop">
+                <table className="admin-table">
+                    <thead>
+                        <tr>
+                            <th style={{ width: 40 }}>#</th>
+                            <th style={{ width: 100 }}>Icon</th>
+                            <th>Text</th>
+                            <th style={{ width: 100 }}>Status</th>
+                            <th style={{ width: 100 }}>Actions</th>
                         </tr>
-                    ))}
-                    {promos.length === 0 && (
-                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No promos yet. Add one above!</td></tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {promos.map(p => (
+                            <tr key={p.id}>
+                                <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>#{p.id}</td>
+                                <td><span className="table-badge">{p.icon}</span></td>
+                                <td className="font-medium">{p.text}</td>
+                                <td>
+                                    <button onClick={() => handleTogglePromo(p)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: p.is_active ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px' }}>
+                                        {p.is_active ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
+                                        {p.is_active ? 'Active' : 'Hidden'}
+                                    </button>
+                                </td>
+                                <td>
+                                    <div className="table-actions">
+                                        <button className="icon-btn edit" onClick={() => setEditingPromo({ ...p })}><Edit size={16} /></button>
+                                        <button className="icon-btn delete" onClick={() => handleDeletePromo(p.id)}><Trash2 size={16} /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {promos.length === 0 && (
+                            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No promos yet. Add one above!</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* ── Mobile Cards ── */}
+            <div className="admin-mobile-cards">
+                {promos.map(p => (
+                    <div className="mobile-card" key={p.id}>
+                        <div className="mobile-card-header">
+                            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Megaphone size={20} color="var(--primary-teal)" />
+                            </div>
+                            <div className="mobile-card-title">
+                                <h4>{p.text}</h4>
+                                <div className="card-subtitle">#{p.id} · Icon: {p.icon}</div>
+                            </div>
+                        </div>
+                        <div className="mobile-card-body single-col">
+                            <div className="card-info-item">
+                                <span className="card-info-label">Status</span>
+                                <span className="card-info-value">
+                                    <button onClick={() => handleTogglePromo(p)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: p.is_active ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px', padding: 0 }}>
+                                        {p.is_active ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
+                                        {p.is_active ? 'Active' : 'Hidden'}
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                        <div className="mobile-card-footer">
+                            <button className="icon-btn edit" onClick={() => setEditingPromo({ ...p })}><Edit size={16} /></button>
+                            <button className="icon-btn delete" onClick={() => handleDeletePromo(p.id)}><Trash2 size={16} /></button>
+                        </div>
+                    </div>
+                ))}
+                {promos.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No promos yet. Add one above!</div>
+                )}
+            </div>
 
             {/* Inline edit modal */}
             {editingPromo && (
@@ -1158,53 +1340,101 @@ const Admin = () => {
                     <h3>Blog Posts <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '14px' }}>({blogPosts.length} total)</span></h3>
                     <Button icon={<Plus size={16} />} onClick={() => { setBlogForm(EMPTY_POST); setBlogPanelMode('add'); setBlogImagePreview(null); setBlogImageFile(null); setBlogPanelOpen(true); }}>New Post</Button>
                 </div>
-                <table className="admin-table">
-                    <thead>
-                        <tr>
-                            <th style={{ width: '60px' }}>Image</th>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {blogPosts.map(post => (
-                            <tr key={post.id}>
-                                <td>
-                                    {post.image_url
-                                        ? <img src={post.image_url} alt={post.title} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} onError={e => e.target.style.display = 'none'} />
-                                        : <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={18} color="var(--text-muted)" /></div>
-                                    }
-                                </td>
-                                <td style={{ maxWidth: '260px' }}>
-                                    <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.title}</div>
-                                    {post.excerpt && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.excerpt}</div>}
-                                </td>
-                                <td>{post.category ? <span className="table-badge">{post.category}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>—</span>}</td>
-                                <td>
-                                    <button onClick={() => handleToggleBlogPublish(post)}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: post.is_published ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px' }}>
-                                        {post.is_published ? <><Globe size={15} /> Published</> : <><EyeOff size={15} /> Draft</>}
-                                    </button>
-                                </td>
-                                <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                                    {new Date(post.created_at).toLocaleDateString()}
-                                </td>
-                                <td>
-                                    <div className="table-actions">
-                                        <button className="icon-btn edit" title="Edit" onClick={() => { setBlogForm({ ...post, _id: post.id }); setBlogPanelMode('edit'); setBlogImagePreview(post.image_url || null); setBlogImageFile(null); setBlogPanelOpen(true); }}><Edit size={15} /></button>
-                                        <button className="icon-btn delete" title="Delete" onClick={() => handleDeleteBlogPost(post.id)}><Trash2 size={15} /></button>
-                                    </div>
-                                </td>
+                <div className="admin-table-desktop">
+                    <table className="admin-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '60px' }}>Image</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                        {blogPosts.length === 0 && (
-                            <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No blog posts yet. Click "New Post" to get started!</td></tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {blogPosts.map(post => (
+                                <tr key={post.id}>
+                                    <td>
+                                        {post.image_url
+                                            ? <img src={post.image_url} alt={post.title} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} onError={e => e.target.style.display = 'none'} />
+                                            : <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={18} color="var(--text-muted)" /></div>
+                                        }
+                                    </td>
+                                    <td style={{ maxWidth: '260px' }}>
+                                        <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.title}</div>
+                                        {post.excerpt && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.excerpt}</div>}
+                                    </td>
+                                    <td>{post.category ? <span className="table-badge">{post.category}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>—</span>}</td>
+                                    <td>
+                                        <button onClick={() => handleToggleBlogPublish(post)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: post.is_published ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px' }}>
+                                            {post.is_published ? <><Globe size={15} /> Published</> : <><EyeOff size={15} /> Draft</>}
+                                        </button>
+                                    </td>
+                                    <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                        {new Date(post.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td>
+                                        <div className="table-actions">
+                                            <button className="icon-btn edit" title="Edit" onClick={() => { setBlogForm({ ...post, _id: post.id }); setBlogPanelMode('edit'); setBlogImagePreview(post.image_url || null); setBlogImageFile(null); setBlogPanelOpen(true); }}><Edit size={15} /></button>
+                                            <button className="icon-btn delete" title="Delete" onClick={() => handleDeleteBlogPost(post.id)}><Trash2 size={15} /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {blogPosts.length === 0 && (
+                                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No blog posts yet. Click "New Post" to get started!</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* ── Mobile Cards ── */}
+                <div className="admin-mobile-cards">
+                    {blogPosts.map(post => (
+                        <div className="mobile-card" key={post.id}>
+                            <div className="mobile-card-header">
+                                {post.image_url
+                                    ? <img src={post.image_url} alt={post.title} onError={e => e.target.style.display = 'none'} />
+                                    : <div className="card-img-placeholder"><FileText size={22} color="var(--text-muted)" /></div>
+                                }
+                                <div className="mobile-card-title">
+                                    <h4>{post.title}</h4>
+                                    {post.excerpt && <div className="card-subtitle">{post.excerpt}</div>}
+                                </div>
+                            </div>
+                            <div className="mobile-card-body">
+                                <div className="card-info-item">
+                                    <span className="card-info-label">Category</span>
+                                    <span className="card-info-value">
+                                        {post.category ? <span className="table-badge">{post.category}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                                    </span>
+                                </div>
+                                <div className="card-info-item">
+                                    <span className="card-info-label">Date</span>
+                                    <span className="card-info-value">{new Date(post.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <div className="card-info-item">
+                                    <span className="card-info-label">Status</span>
+                                    <span className="card-info-value">
+                                        <button onClick={() => handleToggleBlogPublish(post)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: post.is_published ? 'var(--primary-teal)' : 'var(--text-muted)', fontWeight: 600, fontSize: '13px', padding: 0 }}>
+                                            {post.is_published ? <><Globe size={15} /> Published</> : <><EyeOff size={15} /> Draft</>}
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mobile-card-footer">
+                                <button className="icon-btn edit" title="Edit" onClick={() => { setBlogForm({ ...post, _id: post.id }); setBlogPanelMode('edit'); setBlogImagePreview(post.image_url || null); setBlogImageFile(null); setBlogPanelOpen(true); }}><Edit size={15} /></button>
+                                <button className="icon-btn delete" title="Delete" onClick={() => handleDeleteBlogPost(post.id)}><Trash2 size={15} /></button>
+                            </div>
+                        </div>
+                    ))}
+                    {blogPosts.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No blog posts yet. Click "New Post" to get started!</div>
+                    )}
+                </div>
             </div>
 
             {/* Blog slide-in editor panel */}
@@ -1449,9 +1679,20 @@ const Admin = () => {
     return (
         <div className="admin-layout">
             <aside className="admin-sidebar">
+                {/* ── Top bar: Logo + hamburger (mobile) / full sidebar (desktop) ── */}
                 <div className="admin-logo">
                     <h2><span>F</span>Furnish.<span style={{ fontSize: '14px', color: 'var(--text-muted)' }}> Admin</span></h2>
+                    {/* Hamburger — only visible on mobile via CSS */}
+                    <button
+                        className="admin-hamburger"
+                        onClick={() => setMobileMenuOpen(o => !o)}
+                        aria-label="Toggle menu"
+                    >
+                        {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
                 </div>
+
+                {/* Desktop nav (always visible on desktop, hidden on mobile) */}
                 <nav className="admin-nav">
                     <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>
                         <LayoutDashboard size={20} /> Dashboard
@@ -1475,6 +1716,32 @@ const Admin = () => {
                         <BookOpen size={20} /> Blog Posts
                     </button>
                 </nav>
+
+                {/* Mobile dropdown menu (hamburger-controlled) */}
+                <div className={`admin-mobile-menu${mobileMenuOpen ? ' open' : ''}`}>
+                    {[
+                        { tab: 'dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+                        { tab: 'products', icon: <Package size={20} />, label: 'Products' },
+                        { tab: 'users', icon: <Users size={20} />, label: 'Users' },
+                        { tab: 'orders', icon: <ShoppingCart size={20} />, label: 'Orders' },
+                        { tab: 'hero', icon: <Star size={20} />, label: 'Hero Settings' },
+                        { tab: 'promos', icon: <Megaphone size={20} />, label: 'Promotions' },
+                        { tab: 'blog', icon: <BookOpen size={20} />, label: 'Blog Posts' },
+                    ].map(({ tab, icon, label }) => (
+                        <button
+                            key={tab}
+                            className={`admin-mobile-menu-item${activeTab === tab ? ' active' : ''}`}
+                            onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }}
+                        >
+                            {icon} {label}
+                        </button>
+                    ))}
+                    <div className="admin-mobile-menu-divider" />
+                    <button className="admin-mobile-menu-back" onClick={() => window.location.href = '/'}>
+                        <LogOut size={18} /> Back to Store
+                    </button>
+                </div>
+
                 <div className="admin-footer">
                     <button className="logout-btn" onClick={() => window.location.href = "/"}>
                         <LogOut size={20} /> Back to Store
