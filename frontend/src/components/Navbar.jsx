@@ -4,18 +4,23 @@ import { NavLink, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
-const NAV_LINKS = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/shop', label: 'Shop' },
-  { to: '/about', label: 'About Us' },
-  { to: '/contact', label: 'Contact Us' },
-  { to: '/blog', label: 'Blog' },
-];
+// We will remove NAV_LINKS from outside the component and define it inside.
 
 const Navbar = () => {
   const { cart } = useCart();
   const { user } = useAuth();
   const cartCount = cart.reduce((n, item) => n + item.quantity, 0);
+
+  const NAV_LINKS = [
+    { to: '/', label: 'Home', end: true },
+    { to: '/shop', label: 'Shop' },
+    { to: '/about', label: 'About Us' },
+    { to: '/contact', label: 'Contact Us' },
+    { to: '/blog', label: 'Blog' },
+  ];
+  if (user?.is_admin) {
+    NAV_LINKS.push({ to: '/admin', label: 'Admin' });
+  }
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);

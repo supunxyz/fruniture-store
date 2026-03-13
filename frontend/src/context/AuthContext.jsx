@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await axios.post('http://localhost:8000/api/users/login', { email, password });
             setUser(res.data);
-            return { success: true };
+            return { success: true, user: res.data };
         } catch (error) {
             return { success: false, message: error.response?.data?.detail || 'Login failed' };
         }

@@ -16,7 +16,7 @@ const Login = () => {
 
         const res = await login(email, password);
         if (res.success) {
-            navigate('/profile');
+            navigate(res.user?.is_admin ? '/admin' : '/profile');
         } else {
             setError(res.message);
         }
