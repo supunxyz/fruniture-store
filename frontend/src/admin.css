@@ -531,13 +531,26 @@
     }
 
     .admin-grid {
-        grid-template-columns: 1fr;
-        gap: 14px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
     }
 
     .admin-stat-card {
-        padding: 18px;
+        padding: 16px;
         border-radius: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+    }
+
+    .stat-value {
+        font-size: 22px;
     }
 
     /* ── Hide tables, show cards ── */
@@ -658,7 +671,7 @@
 
     .mobile-card-footer .icon-btn {
         flex: 1;
-        height: 36px;
+        height: 38px;
         border-radius: 10px;
         font-size: 13px;
         gap: 6px;
@@ -672,14 +685,136 @@
         margin-bottom: 16px;
     }
 
+    .admin-table-header>div {
+        width: 100%;
+    }
+
+    .admin-table-header>div>div:first-child,
+    .admin-table-header>div>select,
+    .admin-table-header>div>input {
+        flex: 1;
+    }
+
     .admin-table-header h3 {
         font-size: 16px;
+    }
+
+    /* ── Make toolbar search/filter/button full width ── */
+    .admin-table-header>div[style] {
+        flex-wrap: wrap !important;
+    }
+
+    .admin-table-header>div[style]>div {
+        flex: 1 !important;
+        min-width: 140px;
+    }
+
+    .admin-table-header>div[style]>button {
+        width: 100%;
+        justify-content: center;
     }
 
     /* ── Modal panel responsive ── */
     .product-panel {
         width: calc(100vw - 24px) !important;
         max-height: calc(100vh - 40px);
+    }
+}
+
+/* ── Tablet: 2-column stat cards ── */
+@media screen and (max-width: 680px) {
+    .admin-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .admin-stat-card {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+    }
+}
+
+/* ── Small phones ── */
+@media screen and (max-width: 480px) {
+    .admin-content {
+        padding: 8px;
+    }
+
+    .admin-table-container {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .admin-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .admin-stat-card {
+        flex-direction: row;
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .mobile-card {
+        padding: 12px;
+    }
+
+    .mobile-card-body {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .mobile-card-footer .icon-btn {
+        height: 42px;
+        font-size: 14px;
+    }
+
+    /* Full-width product toolbar on tiny screens */
+    .admin-table-header,
+    .admin-table-header>div {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .admin-table-header input,
+    .admin-table-header select {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .admin-header h2 {
+        font-size: 14px;
+    }
+
+    /* Promo add form */
+    .admin-table-container form[style] {
+        flex-direction: column !important;
     }
 }
 
@@ -841,4 +976,70 @@
 .product-drop-zone.dragover {
     border-color: var(--primary-teal);
     background: rgba(30, 120, 145, 0.04);
+}
+
+/* ── Panel label helper ── */
+.panel-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+/* ── Promo add form ── */
+.promo-add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+    padding: 18px;
+    background: var(--bg-secondary, #f8fafc);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.promo-add-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.promo-icon-col {
+    flex: 0 0 140px;
+    min-width: 120px;
+}
+
+.promo-text-col {
+    flex: 1;
+    min-width: 180px;
+}
+
+@media screen and (max-width: 480px) {
+    .promo-add-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .promo-icon-col,
+    .promo-text-col {
+        flex: unset;
+        width: 100%;
+    }
+}
+
+order-action-btn.view:hover {
+    background: rgba(30, 120, 145, 0.16);
+}
+
+.order-action-btn.delete {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.order-action-btn.delete:hover {
+    background: #fee2e2;
 }

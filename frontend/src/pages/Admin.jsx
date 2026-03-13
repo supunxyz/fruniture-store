@@ -379,25 +379,25 @@ const Admin = () => {
                 {/* ── Toolbar ── */}
                 <div className="admin-table-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
                     <h3 style={{ margin: 0 }}>Product Inventory <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '14px' }}>({filteredProducts.length} of {products.length})</span></h3>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
                         {/* Search */}
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', flex: 1, minWidth: '160px' }}>
                             <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                             <input
                                 type="text" placeholder="Search products..."
                                 value={productSearch} onChange={e => setProductSearch(e.target.value)}
-                                style={{ paddingLeft: '32px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', width: '200px', fontSize: '13px' }}
+                                style={{ paddingLeft: '32px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', width: '100%', fontSize: '13px', boxSizing: 'border-box' }}
                             />
                         </div>
                         {/* Category filter */}
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', flex: '0 0 auto', minWidth: '130px' }}>
                             <select value={productCatFilter} onChange={e => setProductCatFilter(e.target.value)}
-                                style={{ appearance: 'none', paddingLeft: '12px', paddingRight: '28px', paddingTop: '8px', paddingBottom: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>
+                                style={{ appearance: 'none', paddingLeft: '12px', paddingRight: '28px', paddingTop: '8px', paddingBottom: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer', width: '100%' }}>
                                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                             <ChevronDown size={14} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                         </div>
-                        <button className="btn-primary" onClick={openAddPanel} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button className="btn-primary" onClick={openAddPanel} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                             <Plus size={16} /> Add Product
                         </button>
                     </div>
@@ -791,22 +791,19 @@ const Admin = () => {
                 {users.map(u => (
                     <div className="mobile-card" key={u.id}>
                         <div className="mobile-card-header">
-                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary-teal)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', flexShrink: 0 }}>
+                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: u.is_admin ? 'var(--primary-teal)' : 'var(--bg-light)', color: u.is_admin ? 'white' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', flexShrink: 0, border: u.is_admin ? 'none' : '1px solid var(--border-color)' }}>
                                 {u.username?.charAt(0).toUpperCase() || 'U'}
                             </div>
                             <div className="mobile-card-title">
-                                <h4>{u.username}</h4>
+                                <h4>{u.username} {u.is_admin && <span style={{ fontSize: '10px', background: 'var(--primary-teal)', color: 'white', padding: '1px 6px', borderRadius: '20px', fontWeight: 600, verticalAlign: 'middle' }}>Admin</span>}</h4>
                                 <div className="card-subtitle">{u.email}</div>
+                                {u.phone_number && <div className="card-subtitle" style={{ marginTop: '2px' }}>📞 {u.phone_number}</div>}
                             </div>
                         </div>
-                        <div className="mobile-card-body">
+                        <div className="mobile-card-body" style={{ gridTemplateColumns: '1fr 1fr' }}>
                             <div className="card-info-item">
                                 <span className="card-info-label">ID</span>
                                 <span className="card-info-value">#{u.id}</span>
-                            </div>
-                            <div className="card-info-item">
-                                <span className="card-info-label">Role</span>
-                                <span className="card-info-value">{u.is_admin ? 'Admin' : 'Customer'}</span>
                             </div>
                             <div className="card-info-item">
                                 <span className="card-info-label">Status</span>
@@ -815,6 +812,10 @@ const Admin = () => {
                                         {u.is_active ? 'Active' : 'Inactive'}
                                     </span>
                                 </span>
+                            </div>
+                            <div className="card-info-item" style={{ gridColumn: '1 / -1' }}>
+                                <span className="card-info-label">Role</span>
+                                <span className="card-info-value">{u.is_admin ? '🛡 Admin' : '👤 Customer'}</span>
                             </div>
                         </div>
                         <div className="mobile-card-footer">
@@ -942,7 +943,7 @@ const Admin = () => {
                                         <div className="card-subtitle">User #{o.user_id}{o.mobile1 ? ` · ${o.mobile1}` : ''}</div>
                                     </div>
                                 </div>
-                                <div className="mobile-card-body">
+                                <div className="mobile-card-body" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                     <div className="card-info-item">
                                         <span className="card-info-label">Total</span>
                                         <span className="card-info-value" style={{ color: 'var(--primary-teal)', fontWeight: 700 }}>{formatPrice(o.total_amount)}</span>
@@ -951,7 +952,7 @@ const Admin = () => {
                                         <span className="card-info-label">Items</span>
                                         <span className="card-info-value">{o.items.length} item{o.items.length !== 1 ? 's' : ''}</span>
                                     </div>
-                                    <div className="card-info-item">
+                                    <div className="card-info-item" style={{ gridColumn: '1 / -1' }}>
                                         <span className="card-info-label">Status</span>
                                         <span className="card-info-value">
                                             <span className={`table-badge ${cls}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -959,7 +960,7 @@ const Admin = () => {
                                             </span>
                                         </span>
                                     </div>
-                                    <div className="card-info-item">
+                                    <div className="card-info-item" style={{ gridColumn: '1 / -1' }}>
                                         <span className="card-info-label">Date</span>
                                         <span className="card-info-value">{new Date(o.created_at).toLocaleDateString()}</span>
                                     </div>
@@ -1153,21 +1154,23 @@ const Admin = () => {
             </div>
 
             {/* Add new */}
-            <form onSubmit={handleAddPromo} style={{ display: 'flex', gap: '12px', marginBottom: '28px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                <div style={{ flex: '0 0 140px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-muted)' }}>ICON</label>
-                    <select value={newPromoIcon} onChange={e => setNewPromoIcon(e.target.value)}
-                        style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-                        {ICON_OPTIONS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
-                    </select>
+            <form onSubmit={handleAddPromo} className="promo-add-form">
+                <div className="promo-add-row">
+                    <div className="promo-icon-col">
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-muted)' }}>ICON</label>
+                        <select value={newPromoIcon} onChange={e => setNewPromoIcon(e.target.value)}
+                            style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                            {ICON_OPTIONS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
+                        </select>
+                    </div>
+                    <div className="promo-text-col">
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-muted)' }}>PROMO TEXT</label>
+                        <input type="text" value={newPromoText} onChange={e => setNewPromoText(e.target.value)}
+                            placeholder="e.g. Free Shipping on orders over $500"
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
+                    </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px', color: 'var(--text-muted)' }}>PROMO TEXT</label>
-                    <input type="text" value={newPromoText} onChange={e => setNewPromoText(e.target.value)}
-                        placeholder="e.g. Free Shipping on orders over $500"
-                        style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
-                </div>
-                <Button type="submit" icon={<Plus size={16} />} size="sm" style={{ flexShrink: 0 }}>
+                <Button type="submit" icon={<Plus size={16} />} size="sm" style={{ width: '100%', justifyContent: 'center', marginTop: '4px' }}>
                     Add Promo
                 </Button>
             </form>
@@ -1551,18 +1554,18 @@ const Admin = () => {
                 <form onSubmit={handleUpdateHero} style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '640px' }}>
 
                     {/* Title row */}
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                        <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 160px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Title (First Line)</label>
-                            <input type="text" value={heroData.title_black} onChange={e => setHeroData({ ...heroData, title_black: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="text" value={heroData.title_black} onChange={e => setHeroData({ ...heroData, title_black: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 160px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px', color: 'var(--primary-teal)' }}>Title (Highlighted)</label>
-                            <input type="text" value={heroData.title_colored} onChange={e => setHeroData({ ...heroData, title_colored: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="text" value={heroData.title_colored} onChange={e => setHeroData({ ...heroData, title_colored: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 160px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Title (End Line)</label>
-                            <input type="text" value={heroData.title_black_2} onChange={e => setHeroData({ ...heroData, title_black_2: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="text" value={heroData.title_black_2} onChange={e => setHeroData({ ...heroData, title_black_2: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
                     </div>
 
@@ -1573,22 +1576,22 @@ const Admin = () => {
                     </div>
 
                     {/* Prices */}
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                        <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 120px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Current Price (Rs.)</label>
-                            <input type="number" step="0.01" value={heroData.current_price} onChange={e => setHeroData({ ...heroData, current_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="number" step="0.01" value={heroData.current_price} onChange={e => setHeroData({ ...heroData, current_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 120px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Old Price (Rs.)</label>
-                            <input type="number" step="0.01" value={heroData.old_price} onChange={e => setHeroData({ ...heroData, old_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="number" step="0.01" value={heroData.old_price} onChange={e => setHeroData({ ...heroData, old_price: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 100px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Rating</label>
-                            <input type="number" step="0.1" min="0" max="5" value={heroData.rating} onChange={e => setHeroData({ ...heroData, rating: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="number" step="0.1" min="0" max="5" value={heroData.rating} onChange={e => setHeroData({ ...heroData, rating: parseFloat(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 100px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>Reviews Count</label>
-                            <input type="number" value={heroData.reviews_count} onChange={e => setHeroData({ ...heroData, reviews_count: parseInt(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                            <input type="number" value={heroData.reviews_count} onChange={e => setHeroData({ ...heroData, reviews_count: parseInt(e.target.value) })} style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', boxSizing: 'border-box' }} />
                         </div>
                     </div>
 
