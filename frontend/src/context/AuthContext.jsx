@@ -39,12 +39,33 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const sendOtp = async (phone_number) => {
+        try {
+            await axios.post('http://localhost:8000/api/users/send-otp', { phone_number });
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.detail || 'Failed to send OTP' };
+        }
+    };
+
+    const registerVerified = async (username, email, password, phone_number, otp) => {
+        try {
+            const res = await axios.post('http://localhost:8000/api/users/register-verified', {
+                username, email, password, phone_number, otp,
+            });
+            setUser(res.data);
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.detail || 'Registration failed' };
+        }
+    };
+
     const logout = () => {
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, login, register, logout }}>
+        <AuthContext.Provider value={{ user, setUser, login, register, sendOtp, registerVerified, logout }}>
             {children}
         </AuthContext.Provider>
     );

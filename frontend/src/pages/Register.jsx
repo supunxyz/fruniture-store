@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { Phone, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Phone, User, Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const Register = () => {
     const [username, setUsername] = useState('');
@@ -14,7 +14,14 @@ const Register = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const { register } = useAuth();
+    // OTP step state
+    const [step, setStep] = useState(1); // 1 = form, 2 = OTP verification
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otpSending, setOtpSending] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+    const otpRefs = useRef([]);
+
+    const { sendOtp, registerVerified } = useAuth();
     const navigate = useNavigate();
 
     const countryCodes = [
@@ -30,19 +37,97 @@ const Register = () => {
         { code: '+880', flag: '🇧🇩', name: 'BD' },
     ];
 
-    const handleSubmit = async (e) => {
+    const fullPhone = `${countryCode}${phoneNumber}`;
+
+    // Countdown timer for resend OTP
+    useEffect(() => {
+        if (countdown <= 0) return;
+        const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [countdown]);
+
+    // Handle OTP input boxes
+    const handleOtpChange = (index, value) => {
+        if (!/^\d?$/.test(value)) return;
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+        if (value && index < 5) {
+            otpRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            otpRefs.current[index - 1]?.focus();
+        }
+    };
+
+    const handleOtpPaste = (e) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        if (pasted.length === 6) {
+            setOtp(pasted.split(''));
+            otpRefs.current[5]?.focus();
+        }
+    };
+
+    // Step 1: Validate form and send OTP
+    const handleSendOtp = async (e) => {
         e.preventDefault();
         setError(null);
-        if (phoneNumber && !/^\d{7,15}$/.test(phoneNumber)) {
-            setError('Please enter a valid phone number (digits only, 7–15 chars).');
+        if (!phoneNumber || !/^\d{7,15}$/.test(phoneNumber)) {
+            setError('A valid phone number is required for SMS verification.');
+            return;
+        }
+        if (!username || !email || !password) {
+            setError('Please fill in all required fields.');
+            return;
+        }
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            return;
+        }
+        setOtpSending(true);
+        const res = await sendOtp(fullPhone);
+        setOtpSending(false);
+        if (res.success) {
+            setStep(2);
+            setCountdown(60);
+            setOtp(['', '', '', '', '', '']);
+        } else {
+            setError(res.message);
+        }
+    };
+
+    // Step 2: Verify OTP and register
+    const handleVerifyAndRegister = async (e) => {
+        e.preventDefault();
+        setError(null);
+        const otpCode = otp.join('');
+        if (otpCode.length !== 6) {
+            setError('Please enter the 6-digit verification code.');
             return;
         }
         setLoading(true);
-        const fullPhone = phoneNumber ? `${countryCode}${phoneNumber}` : '';
-        const res = await register(username, email, password, fullPhone || undefined);
+        const res = await registerVerified(username, email, password, fullPhone, otpCode);
         setLoading(false);
         if (res.success) {
             navigate('/profile');
+        } else {
+            setError(res.message);
+        }
+    };
+
+    // Resend OTP
+    const handleResendOtp = async () => {
+        setError(null);
+        setOtpSending(true);
+        const res = await sendOtp(fullPhone);
+        setOtpSending(false);
+        if (res.success) {
+            setCountdown(60);
+            setOtp(['', '', '', '', '', '']);
         } else {
             setError(res.message);
         }
@@ -140,7 +225,9 @@ const Register = () => {
                         style={{ flex: '1.3', padding: '40px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'white' }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '28px' }}>
-                            <h2 style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--text-dark)', margin: 0 }}>Create Account</h2>
+                            <h2 style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--text-dark)', margin: 0 }}>
+                                {step === 1 ? 'Create Account' : 'Verify Phone'}
+                            </h2>
                             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                                 Already a member?{' '}
                                 <Link to="/login" style={{ color: 'var(--primary-teal)', fontWeight: '600' }}>Login</Link>
@@ -153,7 +240,9 @@ const Register = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                        {/* ── STEP 1: Registration Form ── */}
+                        {step === 1 && (
+                        <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
                             {/* Full Name */}
                             <div>
@@ -194,7 +283,7 @@ const Register = () => {
                             {/* Phone Number */}
                             <div>
                                 <label style={labelStyle}>
-                                    Phone Number <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(Optional)</span>
+                                    Phone Number <span style={{ color: '#B91C1C', fontWeight: '400' }}>(Required for verification)</span>
                                 </label>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     {/* Country code dropdown */}
@@ -228,6 +317,7 @@ const Register = () => {
                                         <span style={iconWrap}><Phone size={16} /></span>
                                         <input
                                             type="tel"
+                                            required
                                             placeholder="771234567"
                                             value={phoneNumber}
                                             onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
@@ -290,13 +380,102 @@ const Register = () => {
 
                             <button
                                 type="submit"
+                                disabled={otpSending}
+                                className="btn-primary"
+                                style={{ width: '100%', justifyContent: 'center', padding: '13px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: '700', letterSpacing: '0.5px', opacity: otpSending ? 0.7 : 1 }}
+                            >
+                                {otpSending ? 'Sending Code…' : 'SEND VERIFICATION CODE'}
+                            </button>
+                        </form>
+                        )}
+
+                        {/* ── STEP 2: OTP Verification ── */}
+                        {step === 2 && (
+                        <form onSubmit={handleVerifyAndRegister} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+
+                            {/* Back button */}
+                            <button
+                                type="button"
+                                onClick={() => { setStep(1); setError(null); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-teal)', fontSize: '0.85rem', fontWeight: '600', padding: 0 }}
+                            >
+                                <ArrowLeft size={16} /> Back to form
+                            </button>
+
+                            {/* OTP info */}
+                            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--primary-teal-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                                    <ShieldCheck size={28} color="white" />
+                                </div>
+                                <p style={{ fontSize: '0.92rem', color: 'var(--text-dark)', fontWeight: '600', marginBottom: '6px' }}>
+                                    Verification Code Sent
+                                </p>
+                                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                    We sent a 6-digit code to <strong>{fullPhone}</strong>.<br />
+                                    Enter it below to verify your phone number.
+                                </p>
+                            </div>
+
+                            {/* OTP Input Boxes */}
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                                {otp.map((digit, i) => (
+                                    <input
+                                        key={i}
+                                        ref={el => otpRefs.current[i] = el}
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={1}
+                                        value={digit}
+                                        onChange={(e) => handleOtpChange(i, e.target.value)}
+                                        onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                                        onPaste={i === 0 ? handleOtpPaste : undefined}
+                                        style={{
+                                            width: '48px',
+                                            height: '54px',
+                                            textAlign: 'center',
+                                            fontSize: '1.4rem',
+                                            fontWeight: '700',
+                                            borderRadius: '10px',
+                                            border: digit ? '2px solid var(--primary-teal)' : '1.5px solid #cce1de',
+                                            outline: 'none',
+                                            background: '#fafffe',
+                                            color: 'var(--text-dark)',
+                                            transition: 'border-color 0.2s',
+                                        }}
+                                        onFocus={(e) => e.target.style.borderColor = 'var(--primary-teal)'}
+                                        onBlur={(e) => { if (!digit) e.target.style.borderColor = '#cce1de'; }}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Resend OTP */}
+                            <div style={{ textAlign: 'center' }}>
+                                {countdown > 0 ? (
+                                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                        Resend code in <strong>{countdown}s</strong>
+                                    </p>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        disabled={otpSending}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-teal)', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'underline' }}
+                                    >
+                                        {otpSending ? 'Sending…' : 'Resend Code'}
+                                    </button>
+                                )}
+                            </div>
+
+                            <button
+                                type="submit"
                                 disabled={loading}
                                 className="btn-primary"
                                 style={{ width: '100%', justifyContent: 'center', padding: '13px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: '700', letterSpacing: '0.5px', opacity: loading ? 0.7 : 1 }}
                             >
-                                {loading ? 'Creating Account…' : 'SIGN UP'}
+                                {loading ? 'Creating Account…' : 'VERIFY & SIGN UP'}
                             </button>
                         </form>
+                        )}
 
                         <p style={{ marginTop: '18px', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                             By clicking "SIGN UP", I agree to Furnish.'s{' '}

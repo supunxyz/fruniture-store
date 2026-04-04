@@ -4,6 +4,7 @@ from typing import List
 from database import get_db
 import schemas
 from services import user_service
+from services import sms_service
 
 router = APIRouter(
     prefix="/api/users",
@@ -13,6 +14,26 @@ router = APIRouter(
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return user_service.create_user(db, user)
+
+@router.post("/register-verified", response_model=schemas.User)
+def register_verified(user: schemas.UserCreateVerified, db: Session = Depends(get_db)):
+    sms_service.verify_otp(user.phone_number, user.otp)
+    user_data = schemas.UserCreate(
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        phone_number=user.phone_number,
+    )
+    return user_service.create_user(db, user_data)
+
+@router.post("/send-otp")
+async def send_otp(request: schemas.OTPSendRequest):
+    return await sms_service.send_otp(request.phone_number)
+
+@router.post("/verify-otp")
+def verify_otp(request: schemas.OTPVerifyRequest):
+    sms_service.verify_otp(request.phone_number, request.otp)
+    return {"message": "OTP verified successfully", "verified": True}
 
 @router.post("/login", response_model=schemas.User)
 def login_user(user_login: schemas.UserLogin, db: Session = Depends(get_db)):

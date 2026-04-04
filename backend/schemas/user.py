@@ -31,3 +31,15 @@ class User(UserBase):
 class UserLogin(BaseModel):
     email: str
     password: str
+
+class OTPSendRequest(BaseModel):
+    phone_number: str
+
+class OTPVerifyRequest(BaseModel):
+    phone_number: str
+    otp: str
+
+class UserCreateVerified(UserBase):
+    password: str
+    phone_number: str
+    otp: str
