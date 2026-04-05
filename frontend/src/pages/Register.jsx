@@ -8,6 +8,7 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [countryCode, setCountryCode] = useState('+94');
     const [showPassword, setShowPassword] = useState(false);
@@ -26,15 +27,6 @@ const Register = () => {
 
     const countryCodes = [
         { code: '+94', flag: '🇱🇰', name: 'LK' },
-        { code: '+91', flag: '🇮🇳', name: 'IN' },
-        { code: '+1', flag: '🇺🇸', name: 'US' },
-        { code: '+44', flag: '🇬🇧', name: 'GB' },
-        { code: '+61', flag: '🇦🇺', name: 'AU' },
-        { code: '+971', flag: '🇦🇪', name: 'AE' },
-        { code: '+60', flag: '🇲🇾', name: 'MY' },
-        { code: '+65', flag: '🇸🇬', name: 'SG' },
-        { code: '+92', flag: '🇵🇰', name: 'PK' },
-        { code: '+880', flag: '🇧🇩', name: 'BD' },
     ];
 
     const fullPhone = `${countryCode}${phoneNumber}`;
@@ -86,6 +78,10 @@ const Register = () => {
         }
         if (password.length < 6) {
             setError('Password must be at least 6 characters.');
+            return;
+        }
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
             return;
         }
         setOtpSending(true);
@@ -144,6 +140,7 @@ const Register = () => {
         color: 'var(--text-dark)',
         transition: 'border-color 0.2s',
         boxSizing: 'border-box',
+        height: '44px',
     };
     const labelStyle = {
         display: 'block',
@@ -283,45 +280,24 @@ const Register = () => {
                             {/* Phone Number */}
                             <div>
                                 <label style={labelStyle}>
-                                    Phone Number <span style={{ color: '#B91C1C', fontWeight: '400' }}>(Required for verification)</span>
+                                    Phone Number <span style={{ color: '#B91C1C', fontWeight: '400', fontSize: '0.75rem' }}>*Required</span>
                                 </label>
                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                    {/* Country code dropdown */}
-                                    <select
-                                        value={countryCode}
-                                        onChange={(e) => setCountryCode(e.target.value)}
-                                        style={{
-                                            padding: '11px 10px',
-                                            borderRadius: '8px',
-                                            border: '1.5px solid #cce1de',
-                                            outline: 'none',
-                                            fontSize: '0.88rem',
-                                            background: '#fafffe',
-                                            color: 'var(--text-dark)',
-                                            cursor: 'pointer',
-                                            minWidth: '100px',
-                                            flexShrink: 0,
-                                        }}
-                                        onFocus={(e) => e.target.style.borderColor = 'var(--primary-teal)'}
-                                        onBlur={(e) => e.target.style.borderColor = '#cce1de'}
-                                    >
-                                        {countryCodes.map(c => (
-                                            <option key={c.code} value={c.code}>
-                                                {c.flag} {c.code}
-                                            </option>
-                                        ))}
-                                    </select>
-
                                     {/* Number input */}
                                     <div style={{ position: 'relative', flex: 1 }}>
-                                        <span style={iconWrap}><Phone size={16} /></span>
+                                        <span style={iconWrap}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <Phone size={16} />
+                                                <span style={{ fontSize: '0.92rem', color: 'var(--text-dark)', fontWeight: '500' }}>+94</span>
+                                            </span>
+                                        </span>
                                         <input
                                             type="tel"
                                             required
                                             placeholder="771234567"
                                             value={phoneNumber}
                                             onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                                            style={inputStyle}
+                                            style={{ ...inputStyle, paddingLeft: '76px' }}
                                             onFocus={(e) => e.target.style.borderColor = 'var(--primary-teal)'}
                                             onBlur={(e) => e.target.style.borderColor = '#cce1de'}
                                             maxLength={15}
@@ -329,8 +305,8 @@ const Register = () => {
                                     </div>
                                 </div>
                                 {phoneNumber && (
-                                    <p style={{ fontSize: '0.75rem', color: 'var(--primary-teal)', marginTop: '4px' }}>
-                                        Full number: {countryCode}{phoneNumber}
+                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', margin: '4px 0 0 0' }}>
+                                        Full number: <span style={{ color: 'var(--primary-teal)', fontWeight: '600' }}>{countryCode}{phoneNumber}</span>
                                     </p>
                                 )}
                             </div>
@@ -364,6 +340,30 @@ const Register = () => {
                                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Confirm Password */}
+                            <div>
+                                <label style={labelStyle}>Confirm Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={iconWrap}><Lock size={16} /></span>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        required
+                                        placeholder="Re-enter your password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        style={{
+                                            ...inputStyle,
+                                            borderColor: confirmPassword && confirmPassword !== password ? '#B91C1C' : '#cce1de',
+                                        }}
+                                        onFocus={(e) => e.target.style.borderColor = 'var(--primary-teal)'}
+                                        onBlur={(e) => e.target.style.borderColor = confirmPassword && confirmPassword !== password ? '#B91C1C' : '#cce1de'}
+                                    />
+                                </div>
+                                {confirmPassword && confirmPassword !== password && (
+                                    <p style={{ fontSize: '0.72rem', color: '#B91C1C', marginTop: '4px', margin: '4px 0 0 0' }}>Passwords do not match</p>
+                                )}
                             </div>
 
                             {/* SMS Opt-in */}
